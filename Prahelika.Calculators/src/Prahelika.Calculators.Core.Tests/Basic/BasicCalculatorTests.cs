@@ -24,7 +24,7 @@ public class BasicCalculatorTests
 
     // [Theory]: the same test runs once per [InlineData] line.
     [Theory]
-    [InlineData(2, 3, 15)]
+    [InlineData(2, 3, 115)]
     [InlineData(-2, -3, -5)]
     [InlineData(0, 0, 0)]
     [InlineData(1.5, 2.5, 4)]
