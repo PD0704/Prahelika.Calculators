@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Project Path="src/Prahelika.Calculators.Api/Prahelika.Calculators.Api.csproj" />
+  <Project Path="src/Prahelika.Calculators.Core.Tests/Prahelika.Calculators.Core.Tests.csproj" />
+  <Project Path="src/Prahelika.Calculators.Core/Prahelika.Calculators.Core.csproj" />
+</Solution>
