@@ -15,6 +15,7 @@ public sealed class ScientificCalculator : IScientificCalculator
     
     /// <inheritdoc />
     public AngleUnit AngleUnit { get; }
+    #region Roots
 
     /// <inheritdoc />
     public CalcResult<double> Power(double value, double exponent)
@@ -64,7 +65,9 @@ public sealed class ScientificCalculator : IScientificCalculator
 
         return Finish(Math.Pow(value, 1d / degree), "The input must be a valid number.");
     }
+    #endregion
 
+    #region Logarithms
     /// <inheritdoc />
     public CalcResult<double> NaturalLog(double value)
     {
@@ -99,7 +102,9 @@ public sealed class ScientificCalculator : IScientificCalculator
 
         return Finish(Math.Log(value, newBase), "The input must be a valid number.");
     }
+    #endregion
 
+    #region Trignometry
     /// <inheritdoc />
     public CalcResult<double> Sin(double angle) => Trig(Math.Sin(ToRadians(angle)));
 
@@ -143,7 +148,33 @@ public sealed class ScientificCalculator : IScientificCalculator
 
     /// <inheritdoc />
     public CalcResult<double> Atan(double value) =>
-        Finish(FromRadians(Math.Atan(value)), "The input must be a valid number.");
+        Finish(FromRadians(Math.Atan(value)), "The input must be a valid number."); 
+    #endregion
+
+    /// <inheritdoc />
+    public CalcResult<double> Factorial(int n)
+    {
+        if (n < 0)
+        {
+            return CalcResult<double>.Failure(CalcError.InvalidInput, "Factorial is not defined for negative numbers.");
+        }
+
+        double result = 1d;
+        for (int i = 2; i <= n; i++)
+        {
+            result *= i;
+
+            // 171! is too large for a double. Stop here instead of looping up to billions.
+            if (double.IsInfinity(result))
+            {
+                return CalcResult<double>.Failure(CalcError.Overflow, "The result is too large to represent.");
+            }
+        }
+
+        return CalcResult<double>.Success(result);
+    }
+
+
 
     private double ToRadians(double angle) =>
         AngleUnit == AngleUnit.Degrees ? angle * Math.PI / 180d : angle;
