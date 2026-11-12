@@ -8,6 +8,3 @@ public sealed record AngleCalcResponse(double Result, string AngleUnit);
 
 /// <summary>The mathematical constants offered by the API.</summary>
 public sealed record ConstantsResponse(double Pi, double E);
-
-/// <summary>A failed calculation. Error is the CalcError name, for example DivisionByZero.</summary>
-public sealed record ErrorResponse(string Error, string Message);

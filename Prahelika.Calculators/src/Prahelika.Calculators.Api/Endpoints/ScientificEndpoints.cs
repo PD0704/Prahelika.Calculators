@@ -79,7 +79,7 @@ public static class ScientificEndpoints
     {
         if (!TryParseUnit(unit, out var angleUnit))
         {
-            return Results.BadRequest(new ErrorResponse(nameof(CalcError.InvalidInput), "The unit must be 'radians' or 'degrees'."));
+            return ResultMapping.ToProblem(CalcError.InvalidInput, "The unit must be 'radians' or 'degrees'.");
         }
 
         var result = operation(new ScientificCalculator(angleUnit));
