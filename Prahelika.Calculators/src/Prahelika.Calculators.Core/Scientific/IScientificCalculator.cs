@@ -6,6 +6,7 @@ public interface IScientificCalculator
     /// <summary>The unit used for angles: the input of Sin, Cos and Tan, and the output of Asin, Acos and Atan.</summary>
     AngleUnit AngleUnit { get; }
 
+    #region Roots
     /// <summary>Returns value raised to the given exponent.</summary>
     CalcResult<double> Power(double value, double exponent);
 
@@ -13,8 +14,10 @@ public interface IScientificCalculator
     CalcResult<double> SquareRoot(double value);
 
     /// <summary>Returns the root of the given degree, e.g. degree 3 is the cube root.</summary>
-    CalcResult<double> NthRoot(double value, int degree);
+    CalcResult<double> NthRoot(double value, int degree); 
+    #endregion
 
+    #region Logarithms
     /// <summary>Returns the natural logarithm (base e). Fails unless value is positive.</summary>
     CalcResult<double> NaturalLog(double value);
 
@@ -22,8 +25,10 @@ public interface IScientificCalculator
     CalcResult<double> Log10(double value);
 
     /// <summary>Returns the logarithm of value in the given base.</summary>
-    CalcResult<double> Log(double value, double newBase);
+    CalcResult<double> Log(double value, double newBase); 
+    #endregion
 
+    #region Trignometry
     /// <summary>Returns the sine of an angle in the current <see cref="AngleUnit"/>.</summary>
     CalcResult<double> Sin(double angle);
 
@@ -40,5 +45,9 @@ public interface IScientificCalculator
     CalcResult<double> Acos(double value);
 
     /// <summary>Returns the angle whose tangent is value.</summary>
-    CalcResult<double> Atan(double value);
+    CalcResult<double> Atan(double value); 
+    #endregion
+
+    /// <summary>Returns n! (n factorial). Fails for negative numbers, and when the result is too large for a double (n above 170).</summary>
+    CalcResult<double> Factorial(int n);
 }
