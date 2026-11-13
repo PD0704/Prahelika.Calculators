@@ -2,6 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
   </Folder>
+  <Project Path="src/Prahelika.Calculators.Api.Tests/Prahelika.Calculators.Api.Tests.csproj" Id="c26c5fba-949f-494a-8a25-f2705b5127c2" />
   <Project Path="src/Prahelika.Calculators.Api/Prahelika.Calculators.Api.csproj" />
   <Project Path="src/Prahelika.Calculators.Core.Tests/Prahelika.Calculators.Core.Tests.csproj" />
   <Project Path="src/Prahelika.Calculators.Core/Prahelika.Calculators.Core.csproj" />

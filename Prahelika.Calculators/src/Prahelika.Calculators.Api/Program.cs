@@ -37,3 +37,7 @@ app.MapBasicEndpoints();
 app.MapScientificEndpoints();
 
 app.Run();
+
+
+// Makes the Program class visible to the integration tests project.
+public partial class Program { }
