@@ -9,6 +9,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 - `FinanceCalculator` with simple interest and compound interest (annual, semi-annual, quarterly, monthly, weekly or daily compounding), using `decimal` arithmetic and rounding to 2 decimal places by default.
+- Loan calculations: `Emi` (monthly payment, total payment and total interest) and `AmortizationSchedule` (month-by-month payment, principal, interest and balance), for loans of up to 1200 months.
+- `SipFutureValue`: the future value of a monthly investment (SIP) with an expected annual return.
+- `ReturnOnInvestment`: the gain and the ROI percentage.
+- `Gst`: GST added to a price (exclusive) or taken out of one (inclusive).
 
 ## [0.2.0-alpha] - 2026-11-13
 

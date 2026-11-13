@@ -22,4 +22,30 @@ public interface IFinanceCalculator
         decimal annualRatePercent,
         decimal years,
         CompoundingFrequency frequency = CompoundingFrequency.Annually);
+
+
+    /// <summary>
+    /// The monthly loan payment (EMI), total payment and total interest.
+    /// The rate is a percentage per year. Months must be between 1 and 1200.
+    /// Fails if the loan amount is not above zero, the rate is negative, or the months are out of range.
+    /// </summary>
+    CalcResult<LoanSummary> Emi(decimal loanAmount, decimal annualRatePercent, int months);
+
+    /// <summary>
+    /// A month-by-month repayment schedule. The last payment clears whatever remains, so the final balance is 0.
+    /// The same inputs and rules as <see cref="Emi"/>.
+    /// </summary>
+    CalcResult<IReadOnlyList<AmortizationRow>> AmortizationSchedule(decimal loanAmount, decimal annualRatePercent, int months);
+
+    /// <summary>
+    /// The future value of investing the same amount at the start of every month (a SIP).
+    /// The return is a percentage per year, applied monthly. Months must be between 1 and 1200.
+    /// </summary>
+    CalcResult<SipResult> SipFutureValue(decimal monthlyInvestment, decimal expectedAnnualReturnPercent, int months);
+
+    /// <summary>The gain and the return on investment as a percentage. The amount invested must be above zero.</summary>
+    CalcResult<RoiResult> ReturnOnInvestment(decimal amountInvested, decimal finalValue);
+
+    /// <summary>Adds GST to a price, or takes it out of one, depending on the mode. The rate is a percentage.</summary>
+    CalcResult<GstResult> Gst(decimal amount, decimal gstRatePercent, GstMode mode = GstMode.Exclusive);
 }
