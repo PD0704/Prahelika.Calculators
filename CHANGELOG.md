@@ -7,6 +7,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `FinanceCalculator` with simple interest and compound interest (annual, semi-annual, quarterly, monthly, weekly or daily compounding), using `decimal` arithmetic and rounding to 2 decimal places by default.
+
 ## [0.2.0-alpha] - 2026-11-13
 
 ### Added
