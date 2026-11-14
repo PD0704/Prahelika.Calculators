@@ -76,6 +76,7 @@ public class ScientificEndpointTests : IClassFixture<WebApplicationFactory<Progr
     [InlineData("asin?value=2", "InvalidInput")]
     [InlineData("sin?angle=90&unit=gradians", "InvalidInput")]    // unknown unit name
     [InlineData("sin?angle=90&unit=5", "InvalidInput")]           // a number is not a unit name
+    [InlineData("sin?angle=90&unit=1", "InvalidInput")]           // a number is not a unit name
     public async Task InvalidInput_ReturnsCalcProblem(string pathAndQuery, string expectedCode)
     {
         var response = await _client.GetAsync($"/api/scientific/{pathAndQuery}");
