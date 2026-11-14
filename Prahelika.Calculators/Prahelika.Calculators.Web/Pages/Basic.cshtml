@@ -1,0 +1,27 @@
+﻿@page
+@model BasicModel
+@using Prahelika.Calculators.Web.Models
+@{
+    ViewData["Title"] = "Basic calculator";
+}
+
+<h1 class="h2 mb-1">Basic calculator</h1>
+<p class="text-muted">Everyday arithmetic, using exact decimal numbers.</p>
+
+<form method="post" class="row g-3" style="max-width: 32rem">
+    <div class="col-12">
+        <label asp-for="Operation" class="form-label">Operation</label>
+        <select asp-for="Operation" asp-items="Html.GetEnumSelectList<BasicOperation>()" class="form-select"></select>
+    </div>
+    <div class="col-6">
+        <label asp-for="A" class="form-label">First number (A)</label>
+        <input asp-for="A" type="number" step="any" class="form-control" />
+    </div>
+    <div class="col-6">
+        <label asp-for="B" class="form-label">Second number (B)</label>
+        <input asp-for="B" type="number" step="any" class="form-control" />
+    </div>
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Calculate</button>
+    </div>
+</form>

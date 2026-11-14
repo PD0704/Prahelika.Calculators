@@ -1,0 +1,41 @@
+﻿@page
+@model ScientificModel
+@using Prahelika.Calculators.Core.Scientific
+@using Prahelika.Calculators.Web.Models
+@{
+    ViewData["Title"] = "Scientific calculator";
+}
+
+<h1 class="h2 mb-1">Scientific calculator</h1>
+<p class="text-muted">Powers, roots, logarithms, trigonometry and factorials.</p>
+
+<form method="post" class="row g-3" style="max-width: 32rem">
+    <div class="col-12">
+        <label asp-for="Operation" class="form-label">Operation</label>
+        <select asp-for="Operation" asp-items="Html.GetEnumSelectList<ScientificOperation>()" class="form-select"></select>
+    </div>
+    <div class="col-6">
+        <label asp-for="X" class="form-label">Value (X)</label>
+        <input asp-for="X" type="number" step="any" class="form-control" />
+    </div>
+    <div class="col-6">
+        <label asp-for="Y" class="form-label">Second value (Y)</label>
+        <input asp-for="Y" type="number" step="any" class="form-control" />
+        <div class="form-text">Only for power, nth root and log in base Y.</div>
+    </div>
+    <div class="col-12">
+        <span class="form-label d-block">
+            Angle unit <small class="text-muted">(used by sin, cos, tan and their inverses)</small>
+        </span>
+        @foreach (var unit in Enum.GetValues<AngleUnit>())
+        {
+            <div class="form-check form-check-inline">
+                <input asp-for="Unit" type="radio" value="@unit" id="unit-@unit" class="form-check-input" />
+                <label class="form-check-label" for="unit-@unit">@unit</label>
+            </div>
+        }
+    </div>
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Calculate</button>
+    </div>
+</form>
