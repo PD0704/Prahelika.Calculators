@@ -1,15 +1,14 @@
+using Prahelika.Calculators.Core.Basic;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Prahelika.Calculators.Web.Models;
 
 namespace Prahelika.Calculators.Web.Pages;
 
-public class BasicModel : PageModel
+public class BasicModel(IBasicCalculator calculator) : CalculatorPageModel
 {
     [BindProperty]
     public BasicOperation Operation { get; set; } = BasicOperation.Add;
 
-    // decimal? (nullable) so an empty box stays empty instead of showing 0.
     [BindProperty]
     public decimal? A { get; set; }
 
@@ -22,7 +21,33 @@ public class BasicModel : PageModel
 
     public void OnPost()
     {
-        // The calculation is connected in task 3.6.
-        // For now the page just shows the form again, with the values you typed.
+        if (!ModelState.IsValid)
+        {
+            Fail("Please enter valid numbers.");
+            return;
+        }
+
+        if (A is null || B is null)
+        {
+            Fail("Please enter both numbers.");
+            return;
+        }
+
+        decimal a = A.Value;
+        decimal b = B.Value;
+
+        var result = Operation switch
+        {
+            BasicOperation.Add => calculator.Add(a, b),
+            BasicOperation.Subtract => calculator.Subtract(a, b),
+            BasicOperation.Multiply => calculator.Multiply(a, b),
+            BasicOperation.Divide => calculator.Divide(a, b),
+            BasicOperation.Modulo => calculator.Modulo(a, b),
+            // "B% of A". If your Percentage method takes its arguments the other way round, swap them here.
+            BasicOperation.Percentage => calculator.Percentage(b, a),
+            _ => throw new InvalidOperationException($"Unknown operation {Operation}.")
+        };
+
+        Show(result);
     }
 }

@@ -1,17 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Prahelika.Calculators.Core.Finance;
 using Prahelika.Calculators.Web.Models;
 
 namespace Prahelika.Calculators.Web.Pages;
 
-public class FinanceModel : PageModel
+public class FinanceModel(IFinanceCalculator calculator) : CalculatorPageModel
 {
-    // SupportsGet lets this come from the address (/Finance?calculation=Emi) as well as from the form.
     [BindProperty(SupportsGet = true)]
     public FinanceCalculation Calculation { get; set; } = FinanceCalculation.SimpleInterest;
 
-    // One "amount" box whose label depends on the calculation: principal, loan amount, and so on.
     [BindProperty]
     public decimal? Amount { get; set; }
 
@@ -67,6 +64,60 @@ public class FinanceModel : PageModel
 
     public void OnPost()
     {
-        // The calculation is connected in task 3.6.
+        if (!ModelState.IsValid)
+        {
+            Fail("Please enter valid numbers. Months must be a whole number.");
+            return;
+        }
+
+        bool usesYears = Calculation is FinanceCalculation.SimpleInterest or FinanceCalculation.CompoundInterest;
+        bool usesMonths = Calculation is FinanceCalculation.Emi or FinanceCalculation.Amortization or FinanceCalculation.Sip;
+
+        var missing = new List<string>();
+        if (Amount is null) missing.Add(AmountLabel);
+        if (Calculation == FinanceCalculation.Roi)
+        {
+            if (FinalValue is null) missing.Add("Final value");
+        }
+        else if (Rate is null)
+        {
+            missing.Add(RateLabel);
+        }
+        if (usesYears && Years is null) missing.Add("Time (years)");
+        if (usesMonths && Months is null) missing.Add("Time (months)");
+
+        if (missing.Count > 0)
+        {
+            Fail("Please fill in: " + string.Join(", ", missing) + ".");
+            return;
+        }
+
+        decimal amount = Amount!.Value;
+        decimal rate = Rate ?? 0;
+
+        switch (Calculation)
+        {
+            case FinanceCalculation.SimpleInterest:
+                Show(calculator.SimpleInterest(amount, rate, Years!.Value), money: true);
+                break;
+            case FinanceCalculation.CompoundInterest:
+                Show(calculator.CompoundInterest(amount, rate, Years!.Value, Frequency), money: true);
+                break;
+            case FinanceCalculation.Emi:
+                Show(calculator.Emi(amount, rate, Months!.Value), money: true);
+                break;
+            case FinanceCalculation.Amortization:
+                Show(calculator.AmortizationSchedule(amount, rate, Months!.Value), money: true);
+                break;
+            case FinanceCalculation.Sip:
+                Show(calculator.SipFutureValue(amount, rate, Months!.Value), money: true);
+                break;
+            case FinanceCalculation.Roi:
+                Show(calculator.ReturnOnInvestment(amount, FinalValue!.Value), money: true);
+                break;
+            case FinanceCalculation.Gst:
+                Show(calculator.Gst(amount, rate, Mode), money: true);
+                break;
+        }
     }
 }
