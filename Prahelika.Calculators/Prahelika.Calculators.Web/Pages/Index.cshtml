@@ -1,0 +1,40 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="text-center my-5">
+    <h1 class="display-5">Prahelika Calculators</h1>
+    <p class="lead">Basic, scientific and finance calculators, built on a tested .NET library.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h4 card-title">Basic</h2>
+                <p class="card-text">Add, subtract, multiply, divide, remainder and percentage, with exact decimal arithmetic.</p>
+                <a asp-page="/Basic" class="btn btn-primary">Open</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h4 card-title">Scientific</h2>
+                <p class="card-text">Powers, roots, logarithms, trigonometry in degrees or radians, and factorials.</p>
+                <a asp-page="/Scientific" class="btn btn-primary">Open</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h4 card-title">Finance</h2>
+                <p class="card-text">Interest, loan EMI and schedules, SIP, ROI and GST.</p>
+                <a asp-page="/Finance" class="btn btn-primary">Open</a>
+            </div>
+        </div>
+    </div>
+</div>
