@@ -77,7 +77,7 @@ public static class ScientificEndpoints
     // A calculator is cheap to create, so each request gets one that uses the unit it asked for.
     private static IResult Trig(string unit, Func<IScientificCalculator, CalcResult<double>> operation)
     {
-        if (!TryParseUnit(unit, out var angleUnit))
+        if (!EnumParser.TryParseName(unit, out AngleUnit angleUnit))
         {
             return ResultMapping.ToProblem(CalcError.InvalidInput, "The unit must be 'radians' or 'degrees'.");
         }

@@ -13,6 +13,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - `SipFutureValue`: the future value of a monthly investment (SIP) with an expected annual return.
 - `ReturnOnInvestment`: the gain and the ROI percentage.
 - `Gst`: GST added to a price (exclusive) or taken out of one (inclusive).
+- Finance endpoints in the API under `/api/finance`: `simple-interest`, `compound-interest`, `emi`, `amortization`, `sip`, `roi` and `gst`, with integration tests.
+- The scientific `unit` parameter no longer accepts bare numbers such as `1`; use `radians` or `degrees`.
 
 ## [0.2.0-alpha] - 2026-11-13
 

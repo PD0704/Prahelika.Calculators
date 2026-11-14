@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Prahelika.Calculators.Api.Endpoints;
 using Prahelika.Calculators.Core.Basic;
+using Prahelika.Calculators.Core.Finance;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadReq
 
 builder.Services.AddOpenApi();                                          // builds the API description
 builder.Services.AddSingleton<IBasicCalculator, BasicCalculator>();     // dependency injection
+builder.Services.AddSingleton<IFinanceCalculator, FinanceCalculator>(); // dependency injection
 
 var app = builder.Build();
 
@@ -35,6 +37,7 @@ app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 
 app.MapBasicEndpoints();
 app.MapScientificEndpoints();
+app.MapFinanceEndpoints();
 
 app.Run();
 
