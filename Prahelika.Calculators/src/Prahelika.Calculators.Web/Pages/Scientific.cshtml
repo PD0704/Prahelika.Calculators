@@ -21,7 +21,7 @@
     <div class="col-6">
         <label asp-for="Y" class="form-label">Second value (Y)</label>
         <input asp-for="Y" type="number" step="any" class="form-control" />
-        <div class="form-text">Only for power, nth root and log in base Y.</div>
+        <div class="form-text">Only for power, nth root (whole number) and log in base Y.</div>
     </div>
     <div class="col-12">
         <span class="form-label d-block">
@@ -34,8 +34,10 @@
                 <label class="form-check-label" for="unit-@unit">@unit</label>
             </div>
         }
+        <div class="form-text">Currently using <strong>@Model.Unit.ToString().ToLowerInvariant()</strong>.</div>
     </div>
     <div class="col-12">
         <button type="submit" class="btn btn-primary">Calculate</button>
     </div>
 </form>
+<partial name="_Result" model="Model" />

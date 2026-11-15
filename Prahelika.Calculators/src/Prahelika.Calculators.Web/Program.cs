@@ -1,7 +1,20 @@
+using System.Globalization;
+using Prahelika.Calculators.Core.Basic;
+using Prahelika.Calculators.Core.Finance;
+using Prahelika.Calculators.Core.Scientific;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Numbers in the forms always use "." as the decimal point, whatever the server's language is.
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+builder.Services.AddSingleton<IBasicCalculator, BasicCalculator>();
+builder.Services.AddSingleton<IScientificCalculator, ScientificCalculator>();
+builder.Services.AddSingleton<IFinanceCalculator, FinanceCalculator>();
 
 var app = builder.Build();
 
