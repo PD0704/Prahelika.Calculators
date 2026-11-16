@@ -13,8 +13,24 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>calculator;math;finance;scientific</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+
+    <!-- Ship the /// comments inside the package so IntelliSense shows them. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Missing-comment warnings stay as warnings, because warnings are treated as errors elsewhere. -->
+    <WarningsNotAsErrors>CS1591</WarningsNotAsErrors>
+
+    <!-- Source Link: debugger can download the exact source from GitHub. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
 </Project>

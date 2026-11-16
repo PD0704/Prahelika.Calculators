@@ -11,6 +11,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 - Releases are now published to NuGet and GitHub automatically when a version tag is pushed. This is the first NuGet package with the calculator code (earlier versions were a placeholder).
+- Package icon, XML documentation comments (shown in IntelliSense) and Source Link, so you can step into the library's code while debugging.
 
 ## [0.3.0-alpha] - 2026-11-15
 
