@@ -87,7 +87,7 @@ The response contains the result and the unit that was used. Errors use the stan
 
 ## Contributing
 
-Contributions and ideas are welcome. Open an issue to start a conversation.
+Contributions and ideas are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get started.
 
 ## Licence
 

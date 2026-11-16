@@ -1,0 +1,40 @@
+name: Bug report
+description: Something gives a wrong answer or does not work as expected
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where did it happen?
+      options:
+        - NuGet library
+        - API
+        - Website
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, and what did you see?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The exact input values help most, for example "Emi with 100000, 12 and 12".
+      placeholder: |
+        1. ...
+        2. ...
+  - type: input
+    id: version
+    attributes:
+      label: Package or release version
+      placeholder: "0.3.1-alpha"
