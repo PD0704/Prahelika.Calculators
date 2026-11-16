@@ -44,7 +44,7 @@ public class BasicModel(IBasicCalculator calculator) : CalculatorPageModel
             BasicOperation.Divide => calculator.Divide(a, b),
             BasicOperation.Modulo => calculator.Modulo(a, b),
             // "B% of A". If your Percentage method takes its arguments the other way round, swap them here.
-            BasicOperation.Percentage => calculator.Percentage(b, a),
+            BasicOperation.Percentage => calculator.Percentage(a, b),
             _ => throw new InvalidOperationException($"Unknown operation {Operation}.")
         };
 

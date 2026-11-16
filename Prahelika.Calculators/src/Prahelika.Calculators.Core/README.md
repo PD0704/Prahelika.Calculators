@@ -64,7 +64,7 @@ var emi = finance.Emi(100000m, 12m, 12);
 
 if (emi.IsSuccess)
 {
-    Console.WriteLine(emi.Value); // monthly payment 8884.88, total payment and total interest
+        Console.WriteLine(emi.Value.MonthlyPayment); // 8884.88
 }
 ```
 

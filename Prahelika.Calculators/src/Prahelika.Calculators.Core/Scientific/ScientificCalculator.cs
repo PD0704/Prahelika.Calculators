@@ -91,16 +91,16 @@ public sealed class ScientificCalculator : IScientificCalculator
     }
 
     /// <inheritdoc />
-    public CalcResult<double> Log(double value, double newBase)
+    public CalcResult<double> Log(double value, double logBase)
     {
-        if (value <= 0d || newBase <= 0d || newBase == 1d)
+        if (value <= 0d || logBase <= 0d || logBase == 1d)
         {
             return CalcResult<double>.Failure(
                 CalcError.InvalidInput,
                 "The value and base must be positive, and the base cannot be 1.");
         }
 
-        return Finish(Math.Log(value, newBase), "The input must be a valid number.");
+        return Finish(Math.Log(value, logBase), "The input must be a valid number.");
     }
     #endregion
 
