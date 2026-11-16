@@ -85,6 +85,7 @@ Only mistakes in your own code, such as an invalid number of decimal places in a
 
 ## Links
 
-- [Source code, live demo and API](https://github.com/PD0704/Prahelika.Calculators)
+- [Live demo](https://prahelika-calculators.onrender.com)
+- [Source code and API](https://github.com/PD0704/Prahelika.Calculators)
 - [Changelog](https://github.com/PD0704/Prahelika.Calculators/blob/main/CHANGELOG.md)
 - Licence: MIT
