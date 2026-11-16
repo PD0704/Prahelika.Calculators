@@ -73,6 +73,15 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
 
         Assert.Contains("Please enter both numbers.", html);
     }
+    
+    [Fact]
+    public async Task Basic_Percentage_Is_B_Percent_Of_A()
+    {
+        string html = await PostFormAsync("/Basic",
+            new() { ["Operation"] = "Percentage", ["A"] = "150", ["B"] = "20" });
+
+        Assert.Contains(">30</p>", html);
+    }
 
     [Fact]
     public async Task Scientific_Sin_In_Degrees_Reports_The_Unit()
