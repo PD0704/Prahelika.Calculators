@@ -13,7 +13,9 @@ A tested .NET calculator library with basic, scientific and finance calculators,
 
 ## Live demo
 
-Coming soon.
+**[prahelika-calculators.onrender.com](https://prahelika-calculators.onrender.com)**
+
+The demo runs on a free plan, so it sleeps when nobody is using it. The first visit after a quiet spell can take about a minute to wake up.
 
 ## What's inside
 
@@ -80,7 +82,7 @@ The response contains the result and the unit that was used. Errors use the stan
 - [x] Website
 - [x] Automated tests and CI with code coverage
 - [x] Automatic NuGet publishing from version tags
-- [ ] Live demo
+- [x] Live demo
 - [ ] Version 1.0.0
 - [ ] More calculators (ideas: unit converter, date and time, BMI)
 - [ ] GST split into CGST and SGST
