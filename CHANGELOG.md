@@ -7,6 +7,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0-alpha] - 2026-11-16
+
+### Changed
+- The second parameter of `Log` is now named `logBase` (it was `newBase`).
+
 ## [0.3.1-alpha] - 2026-11-16
 
 ### Added

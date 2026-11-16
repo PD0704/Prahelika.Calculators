@@ -167,9 +167,9 @@ public class ScientificCalculatorTests
     [Theory]
     [InlineData(8, 2, 3)]
     [InlineData(81, 3, 4)]
-    public void Log_ValidInput_ReturnsResult(double value, double newBase, double expected)
+    public void Log_ValidInput_ReturnsResult(double value, double logBase, double expected)
     {
-        var result = _radians.Log(value, newBase);
+        var result = _radians.Log(value, logBase);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(expected, result.Value, Precision);
@@ -203,9 +203,9 @@ public class ScientificCalculatorTests
     [InlineData(8, -2)]
     [InlineData(-1, 2)]
     [InlineData(0, 2)]
-    public void Log_InvalidValueOrBase_ReturnsInvalidInput(double value, double newBase)
+    public void Log_InvalidValueOrBase_ReturnsInvalidInput(double value, double logBase)
     {
-        var result = _radians.Log(value, newBase);
+        var result = _radians.Log(value, logBase);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(CalcError.InvalidInput, result.Error);

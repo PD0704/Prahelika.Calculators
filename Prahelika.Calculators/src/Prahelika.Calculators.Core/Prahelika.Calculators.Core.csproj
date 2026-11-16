@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Prahelika.Calculators</PackageId>
-    <Version>0.0.1-alpha</Version>
+    <Version>1.0.0</Version>
     <Authors>Prahelika Dutta (PD)</Authors>
     <Description>A calculator library for .NET with basic, scientific and finance calculators.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

@@ -25,10 +25,10 @@ public interface IScientificCalculator
     CalcResult<double> Log10(double value);
 
     /// <summary>Returns the logarithm of value in the given base.</summary>
-    CalcResult<double> Log(double value, double newBase); 
+    CalcResult<double> Log(double value, double logBase); 
     #endregion
 
-    #region Trignometry
+    #region Trigonometry
     /// <summary>Returns the sine of an angle in the current <see cref="AngleUnit"/>.</summary>
     CalcResult<double> Sin(double angle);
 
