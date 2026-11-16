@@ -7,7 +7,13 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [1.0.0-alpha] - 2026-11-16
+## [1.0.0] - 2026-11-16
+
+First stable release. It includes everything from the 0.x releases: the Basic, Scientific and Finance calculators, the REST API with Swagger, and the website.
+
+### Added
+- Package icon, a full package README, XML documentation comments (shown in IntelliSense) and Source Link, so you can step into the library's code while debugging.
+- Live demo of the website.
 
 ### Changed
 - The second parameter of `Log` is now named `logBase` (it was `newBase`).
@@ -60,7 +66,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - Branch protection on `main`: pull requests and a passing CI check are required.
 - NuGet package metadata and package README. Placeholder package `0.0.1-alpha` published to reserve the package ID.
 
-[Unreleased]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.3.1-alpha...HEAD
+[Unreleased]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.3.1-alpha...v1.0.0
 [0.3.1-alpha]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.3.0-alpha...v0.3.1-alpha
 [0.3.0-alpha]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.2.0-alpha...v0.3.0-alpha
 [0.2.0-alpha]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.1.0-alpha...v0.2.0-alpha
