@@ -7,6 +7,13 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.1-alpha] - 2026-11-16
+
+### Added
+- Releases are now published to NuGet and GitHub automatically when a version tag is pushed. This is the first NuGet package with the calculator code (earlier versions were a placeholder).
+
+## [0.3.0-alpha] - 2026-11-15
+
 ### Added
 - `FinanceCalculator` with simple interest and compound interest (annual, semi-annual, quarterly, monthly, weekly or daily compounding), using `decimal` arithmetic and rounding to 2 decimal places by default.
 - Loan calculations: `Emi` (monthly payment, total payment and total interest) and `AmortizationSchedule` (month-by-month payment, principal, interest and balance), for loans of up to 1200 months.
@@ -14,9 +21,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - `ReturnOnInvestment`: the gain and the ROI percentage.
 - `Gst`: GST added to a price (exclusive) or taken out of one (inclusive).
 - Finance endpoints in the API under `/api/finance`: `simple-interest`, `compound-interest`, `emi`, `amortization`, `sip`, `roi` and `gst`, with integration tests.
-- The scientific `unit` parameter no longer accepts bare numbers such as `1`; use `radians` or `degrees`.
 - Web UI built with Razor Pages: Basic, Scientific and Finance calculator pages with results and friendly error messages.
 - Scientific page lets you choose degrees or radians and shows which unit was used.
+
+### Changed
+- The scientific `unit` parameter no longer accepts bare numbers such as `1`; use `radians` or `degrees`.
 
 ## [0.2.0-alpha] - 2026-11-13
 
@@ -45,6 +54,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - Branch protection on `main`: pull requests and a passing CI check are required.
 - NuGet package metadata and package README. Placeholder package `0.0.1-alpha` published to reserve the package ID.
 
-[Unreleased]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.2.0-alpha...HEAD
+[Unreleased]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.3.1-alpha...HEAD
+[0.3.1-alpha]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.3.0-alpha...v0.3.1-alpha
+[0.3.0-alpha]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.2.0-alpha...v0.3.0-alpha
 [0.2.0-alpha]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.1.0-alpha...v0.2.0-alpha
 [0.1.0-alpha]: https://github.com/PD0704/Prahelika.Calculators/releases/tag/v0.1.0-alpha
