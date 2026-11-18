@@ -21,6 +21,9 @@ builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadReq
 builder.Services.AddOpenApi();                                          // builds the API description
 builder.Services.AddSingleton<IBasicCalculator, BasicCalculator>();     // dependency injection
 builder.Services.AddSingleton<IFinanceCalculator, FinanceCalculator>(); // dependency injection
+builder.Services.AddSingleton<ISavingsCalculator, SavingsCalculator>();           // dependency injection
+builder.Services.AddSingleton<IGstSplitCalculator, GstSplitCalculator>();         // dependency injection
+builder.Services.AddSingleton<IIncomeTaxCalculator, IncomeTaxCalculator>();       // dependency injection
 
 var app = builder.Build();
 

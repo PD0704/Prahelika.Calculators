@@ -72,6 +72,58 @@ public static class FinanceEndpoints
             .WithSummary("GST on an amount. Exclusive adds GST to the amount; inclusive takes it out.")
             .ProducesCalculation<GstResult>();
 
+
+        // ---- India-focused calculators ----
+        // Rates are percentages per year: 7.1 means 7.1%. Amounts are in rupees.
+
+        group.MapGet("/fixed-deposit",
+                (decimal principal, decimal rate, int months, ISavingsCalculator calc, string frequency = "quarterly") =>
+                {
+                    if (!EnumParser.TryParseName(frequency, out CompoundingFrequency parsed))
+                    {
+                        return ResultMapping.ToProblem(
+                            CalcError.InvalidInput,
+                            "The frequency must be one of: annually, semiAnnually, quarterly, monthly, weekly, daily.");
+                    }
+
+                    return calc.FixedDeposit(principal, rate, months, parsed).ToHttpResult();
+                })
+            .WithSummary("Fixed deposit (FD): maturity amount for a lump sum. Compounded quarterly by default. Months: 1 to 1200.")
+            .ProducesCalculation<MaturityResult>();
+
+        group.MapGet("/recurring-deposit",
+                (decimal monthlyDeposit, decimal rate, int months, ISavingsCalculator calc) =>
+                    calc.RecurringDeposit(monthlyDeposit, rate, months).ToHttpResult())
+            .WithSummary("Recurring deposit (RD): maturity amount for a deposit at the start of every month, compounded quarterly. Months: 1 to 1200.")
+            .ProducesCalculation<MaturityResult>();
+
+        group.MapGet("/ppf",
+                (decimal yearlyDeposit, decimal rate, int years, ISavingsCalculator calc) =>
+                    calc.Ppf(yearlyDeposit, rate, years).ToHttpResult())
+            .WithSummary("PPF maturity amount. Yearly deposit 500 to 150,000. Years: 15, or longer in blocks of 5 (20, 25, up to 50).")
+            .ProducesCalculation<MaturityResult>();
+
+        group.MapGet("/gst-split",
+                (decimal amount, decimal rate, IGstSplitCalculator calc, string mode = "exclusive") =>
+                {
+                    if (!EnumParser.TryParseName(mode, out GstMode parsed))
+                    {
+                        return ResultMapping.ToProblem(
+                            CalcError.InvalidInput,
+                            "The mode must be 'exclusive' (amount is before GST) or 'inclusive' (amount includes GST).");
+                    }
+
+                    return calc.GstSplit(amount, rate, parsed).ToHttpResult();
+                })
+            .WithSummary("GST split into CGST and SGST halves. The rate is the total GST rate: 18 gives 9% CGST and 9% SGST.")
+            .ProducesCalculation<GstSplitResult>();
+
+        group.MapGet("/income-tax",
+                (decimal income, IIncomeTaxCalculator calc, bool salaried = true) =>
+                    calc.EstimateNewRegime(income, salaried).ToHttpResult())
+            .WithSummary("Income-tax estimate under the new regime (FY 2026-27): slab breakdown, standard deduction if salaried, rebate and cess. Surcharge is not included.")
+            .ProducesCalculation<IncomeTaxResult>();
+
         return app;
     }
 }

@@ -11,6 +11,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - `SavingsCalculator` with `FixedDeposit` (FD), `RecurringDeposit` (RD) and `Ppf` maturity calculations, with quarterly compounding by default for deposits.
 - `GstSplitCalculator.GstSplit` splits GST into CGST and SGST halves (CGST + SGST always equals the total GST). The existing `Gst` method and `GstResult` are unchanged.
 - `IncomeTaxCalculator.EstimateNewRegime` estimates income tax under the new regime for FY 2026-27: slab-by-slab breakdown, standard deduction, rebate with marginal relief, and 4% cess. The slabs and limits live in one `IncomeTaxRules` table, so they can be updated each year or replaced.
+- API endpoints for the new calculators, under `/api/finance`: `fixed-deposit`, `recurring-deposit`, `ppf`, `gst-split` and `income-tax`.
 
 
 ## [1.0.0] - 2026-11-16
