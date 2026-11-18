@@ -7,6 +7,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `SavingsCalculator` with `FixedDeposit` (FD), `RecurringDeposit` (RD) and `Ppf` maturity calculations, with quarterly compounding by default for deposits.
+
 ## [1.0.0] - 2026-11-16
 
 First stable release. It includes everything from the 0.x releases: the Basic, Scientific and Finance calculators, the REST API with Swagger, and the website.
