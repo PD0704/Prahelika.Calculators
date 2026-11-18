@@ -9,6 +9,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 - `SavingsCalculator` with `FixedDeposit` (FD), `RecurringDeposit` (RD) and `Ppf` maturity calculations, with quarterly compounding by default for deposits.
+- `GstSplitCalculator.GstSplit` splits GST into CGST and SGST halves (CGST + SGST always equals the total GST). The existing `Gst` method and `GstResult` are unchanged.
 
 ## [1.0.0] - 2026-11-16
 
