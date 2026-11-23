@@ -38,6 +38,7 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
     [InlineData("/Basic", "Basic calculator")]
     [InlineData("/Scientific", "Scientific calculator")]
     [InlineData("/Finance", "Finance calculators")]
+    [InlineData("/India", "India finance calculators")]
     public async Task Pages_Open_And_Show_Their_Title(string url, string expectedText)
     {
         var response = await _client.GetAsync(url);
@@ -125,6 +126,73 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
     {
         string html = await PostFormAsync("/Finance?calculation=Emi",
             new() { ["Calculation"] = "Emi", ["Amount"] = "100000" });
+
+        Assert.Contains("Please fill in", html);
+    }
+
+    [Fact]
+    public async Task India_Fixed_Deposit_Shows_The_Maturity_Amount()
+    {
+        string html = await PostFormAsync("/India?calculation=FixedDeposit",
+            new()
+            {
+                ["Calculation"] = "FixedDeposit",
+                ["Amount"] = "100000",
+                ["Rate"] = "7",
+                ["Months"] = "12",
+                ["Frequency"] = "Quarterly"
+            });
+
+        Assert.Contains("185.90", html);          // 1,07,185.90 (the digit grouping depends on the server)
+        Assert.DoesNotContain("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task India_Ppf_Rejects_A_Term_That_Is_Not_Allowed()
+    {
+        string html = await PostFormAsync("/India?calculation=Ppf",
+            new() { ["Calculation"] = "Ppf", ["Amount"] = "50000", ["Rate"] = "7.1", ["Years"] = "16" });
+
+        Assert.Contains("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task India_Gst_Split_Shows_Cgst_And_Sgst()
+    {
+        string html = await PostFormAsync("/India?calculation=GstSplit",
+            new() { ["Calculation"] = "GstSplit", ["Amount"] = "1000", ["Rate"] = "18", ["Mode"] = "Exclusive" });
+
+        Assert.Contains("CGST", html);
+        Assert.Contains("SGST", html);
+        Assert.Contains("90.00", html);
+    }
+
+    [Fact]
+    public async Task India_Income_Tax_Shows_The_Total_And_The_Slab_Breakdown()
+    {
+        string html = await PostFormAsync("/India?calculation=IncomeTax",
+            new() { ["Calculation"] = "IncomeTax", ["Amount"] = "1500000", ["Salaried"] = "true" });
+
+        Assert.Contains("97,500.00", html);        // total tax
+        Assert.Contains("Income In Slab", html);   // the breakdown table
+        Assert.Contains("33,750.00", html);        // tax in the 15% slab
+        Assert.DoesNotContain("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task India_Income_Tax_Without_The_Salaried_Box_Has_No_Standard_Deduction()
+    {
+        string html = await PostFormAsync("/India?calculation=IncomeTax",
+            new() { ["Calculation"] = "IncomeTax", ["Amount"] = "1300000", ["Salaried"] = "false" });
+
+        Assert.Contains("78,000.00", html);
+    }
+
+    [Fact]
+    public async Task India_Missing_Fields_Are_Listed()
+    {
+        string html = await PostFormAsync("/India?calculation=Ppf",
+            new() { ["Calculation"] = "Ppf", ["Amount"] = "50000" });
 
         Assert.Contains("Please fill in", html);
     }

@@ -15,6 +15,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddSingleton<IBasicCalculator, BasicCalculator>();
 builder.Services.AddSingleton<IScientificCalculator, ScientificCalculator>();
 builder.Services.AddSingleton<IFinanceCalculator, FinanceCalculator>();
+builder.Services.AddSingleton<ISavingsCalculator, SavingsCalculator>();
+builder.Services.AddSingleton<IGstSplitCalculator, GstSplitCalculator>();
+builder.Services.AddSingleton<IIncomeTaxCalculator, IncomeTaxCalculator>();
 
 var app = builder.Build();
 
