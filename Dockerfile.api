@@ -11,6 +11,11 @@ COPY --from=build /app .
 
 # Render sends traffic to port 10000 by default
 ENV ASPNETCORE_HTTP_PORTS=10000
+
+# Render handles HTTPS in front of the container. This makes the app trust the "https" it reports,
+# so Swagger calls the https address instead of an http one.
+ENV ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+
 EXPOSE 10000
 
 ENTRYPOINT ["dotnet", "Prahelika.Calculators.Api.dll"]
