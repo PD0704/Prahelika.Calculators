@@ -15,7 +15,9 @@ A tested .NET calculator library with basic, scientific and finance calculators,
 
 **[prahelika-calculators.onrender.com](https://prahelika-calculators.onrender.com)**
 
-The demo runs on a free plan, so it sleeps when nobody is using it. The first visit after a quiet spell can take about a minute to wake up.
+The API, with Swagger documentation you can try in the browser: **[prahelika-calculators-api.onrender.com](https://prahelika-calculators-api.onrender.com)**
+
+Both run on a free plan, so they sleep when nobody is using them. The first visit after a quiet spell can take about a minute to wake up.
 
 ## What's inside
 
@@ -23,7 +25,7 @@ The demo runs on a free plan, so it sleeps when nobody is using it. The first vi
 |---|---|
 | **Core library** (NuGet: `Prahelika.Calculators`) | The calculators. Results come back as a `CalcResult<T>` object instead of exceptions for bad input. |
 | **API** (ASP.NET Core 10 Minimal API) | Every calculator as an endpoint, with Swagger documentation at `/swagger`. |
-| **Web** (Razor Pages) | A simple website for the Basic, Scientific and Finance calculators. |
+| **Web** (Razor Pages) | A simple website for the Basic, Scientific, Finance and India finance calculators. |
 | **Tests** (xUnit) | Unit tests for the library and integration tests for the API and the web pages, run on every pull request. |
 
 ## Calculators
@@ -31,6 +33,7 @@ The demo runs on a free plan, so it sleeps when nobody is using it. The first vi
 - **Basic:** add, subtract, multiply, divide, remainder and percentage, using exact `decimal` arithmetic.
 - **Scientific:** power, roots, logarithms, trigonometry in degrees or radians, and factorial, using `double`.
 - **Finance:** simple and compound interest, loan EMI and amortisation schedule, SIP, ROI and GST, with rounding to 2 decimal places.
+- **India Finance:** Fixed Deposit (FD), Recurring Deposit (RD), Public Provident Fund (PPF), GST split into CGST and SGST, and an income-tax estimate under the new regime (FY 2026-27, surcharge not included).
 
 ## Use the library
 
