@@ -7,6 +7,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `LoanPlanner.Prepay` shows what a lump-sum prepayment does to a loan: the new number of months, and the interest saved. The EMI stays the same.
+
 ## [1.1.0] - 2026-11-23
 
 New India-focused finance calculators, in the library, the API and the website. Nothing from 1.0.0 was changed or removed, so it is safe to update.
