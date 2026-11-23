@@ -86,9 +86,10 @@ The response contains the result and the unit that was used. Errors use the stan
 - [x] Automated tests and CI with code coverage
 - [x] Automatic NuGet publishing from version tags
 - [x] Live demo
-- [ ] Version 1.0.0
-- [ ] More calculators (ideas: unit converter, date and time, BMI)
-- [ ] GST split into CGST and SGST
+- [x] Version 1.0.0
+- [x] India finance: FD, RD, PPF, GST split into CGST and SGST, and an income-tax estimate
+- [ ] Loan tools: prepayment, comparing loans, and a repayment chart
+- [ ] More calculators (ideas: statistics, unit converter, date and time, programmer)
 
 ## Contributing
 
