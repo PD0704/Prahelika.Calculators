@@ -20,4 +20,11 @@ public interface ILoanPlanner
         int months,
         int prepaymentMonth,
         decimal prepaymentAmount);
+
+    /// <summary>
+    /// Compares two loans side by side: the EMI, total interest, processing fee and total cost of each,
+    /// and which costs less overall. The loan amount, rate and months follow the same rules as
+    /// <see cref="FinanceCalculator.Emi"/>. For a fair comparison the two loans should borrow about the same amount.
+    /// </summary>
+    CalcResult<LoanComparison> CompareLoans(LoanOffer first, LoanOffer second);
 }

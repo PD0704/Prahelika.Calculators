@@ -110,4 +110,61 @@ public sealed class LoanPlanner : ILoanPlanner
 
     private static CalcResult<PrepaymentResult> Invalid(string message) =>
         CalcResult<PrepaymentResult>.Failure(CalcError.InvalidInput, message);
+
+    /// <inheritdoc />
+    public CalcResult<LoanComparison> CompareLoans(LoanOffer first, LoanOffer second)
+    {
+        ArgumentNullException.ThrowIfNull(first);
+        ArgumentNullException.ThrowIfNull(second);
+
+        try
+        {
+            var firstSummary = Summarise(first, "First loan");
+            if (!firstSummary.IsSuccess)
+            {
+                return CalcResult<LoanComparison>.Failure(firstSummary.Error, firstSummary.Message ?? "The first loan is not valid.");
+            }
+
+            var secondSummary = Summarise(second, "Second loan");
+            if (!secondSummary.IsSuccess)
+            {
+                return CalcResult<LoanComparison>.Failure(secondSummary.Error, secondSummary.Message ?? "The second loan is not valid.");
+            }
+
+            LoanOfferSummary a = firstSummary.Value!;
+            LoanOfferSummary b = secondSummary.Value!;
+
+            LoanChoice cheaper = a.TotalCost < b.TotalCost ? LoanChoice.First
+                : b.TotalCost < a.TotalCost ? LoanChoice.Second
+                : LoanChoice.Same;
+
+            return CalcResult<LoanComparison>.Success(
+                new LoanComparison(a, b, cheaper, Math.Abs(a.TotalCost - b.TotalCost)));
+        }
+        catch (OverflowException)
+        {
+            return CalcResult<LoanComparison>.Failure(CalcError.Overflow, "The result is too large to represent.");
+        }
+    }
+
+    private CalcResult<LoanOfferSummary> Summarise(LoanOffer offer, string name)
+    {
+        if (offer.ProcessingFee < 0m)
+        {
+            return CalcResult<LoanOfferSummary>.Failure(CalcError.InvalidInput, $"{name}: the processing fee cannot be negative.");
+        }
+
+        // The loan amount, rate and months follow the same rules (and give the same numbers) as the EMI calculation.
+        var emi = _finance.Emi(offer.LoanAmount, offer.AnnualRatePercent, offer.Months);
+        if (!emi.IsSuccess)
+        {
+            return CalcResult<LoanOfferSummary>.Failure(emi.Error, $"{name}: {emi.Message}");
+        }
+
+        LoanSummary loan = emi.Value!;
+        decimal fee = Round(offer.ProcessingFee);
+
+        return CalcResult<LoanOfferSummary>.Success(new LoanOfferSummary(
+            loan.MonthlyPayment, loan.TotalPayment, loan.TotalInterest, fee, loan.TotalInterest + fee));
+    }
 }

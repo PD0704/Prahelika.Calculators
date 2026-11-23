@@ -113,4 +113,155 @@ public class LoanPlannerTests
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new LoanPlanner(-1));
     }
+
+    // ---------- Comparing two loans ----------
+
+    [Fact]
+    public void CompareLoans_Shows_Both_Loans_And_The_Cheaper_One()
+    {
+        var first = new LoanOffer(500000m, 10m, 60, ProcessingFee: 5000m);
+        var second = new LoanOffer(500000m, 10.5m, 60);
+
+        var result = _planner.CompareLoans(first, second);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(new LoanOfferSummary(10623.52m, 637411.20m, 137411.20m, 5000m, 142411.20m), result.Value!.First);
+        Assert.Equal(new LoanOfferSummary(10746.95m, 644817.00m, 144817.00m, 0m, 144817.00m), result.Value.Second);
+        Assert.Equal(LoanChoice.First, result.Value.Cheaper);
+        Assert.Equal(2405.80m, result.Value.CostDifference);
+    }
+
+    [Fact]
+    public void A_Shorter_Loan_Has_A_Bigger_EMI_But_Costs_Less_Overall()
+    {
+        var shorter = new LoanOffer(500000m, 9m, 36);
+        var longer = new LoanOffer(500000m, 9m, 60);
+
+        var result = _planner.CompareLoans(shorter, longer);
+
+        Assert.Equal(15899.87m, result.Value!.First.MonthlyPayment);
+        Assert.Equal(10379.18m, result.Value.Second.MonthlyPayment);
+        Assert.Equal(72395.32m, result.Value.First.TotalInterest);
+        Assert.Equal(122750.80m, result.Value.Second.TotalInterest);
+        Assert.Equal(LoanChoice.First, result.Value.Cheaper);
+        Assert.Equal(50355.48m, result.Value.CostDifference);
+    }
+
+    [Fact]
+    public void A_Lower_Rate_Does_Not_Win_When_The_Fee_Is_High_Enough()
+    {
+        var higherRate = new LoanOffer(1000000m, 9m, 240);
+        var lowerRateWithFee = new LoanOffer(1000000m, 8.75m, 240, ProcessingFee: 50000m);
+
+        var result = _planner.CompareLoans(higherRate, lowerRateWithFee);
+
+        Assert.Equal(1159342.40m, result.Value!.First.TotalCost);
+        Assert.Equal(1170906.40m, result.Value.Second.TotalCost);   // 1120906.40 interest + 50000 fee
+        Assert.Equal(LoanChoice.First, result.Value.Cheaper);
+        Assert.Equal(11564.00m, result.Value.CostDifference);
+    }
+
+    [Fact]
+    public void The_Lower_Rate_Wins_When_The_Fee_Is_Small()
+    {
+        var higherRate = new LoanOffer(1000000m, 9m, 240);
+        var lowerRateWithFee = new LoanOffer(1000000m, 8.75m, 240, ProcessingFee: 15000m);
+
+        var result = _planner.CompareLoans(higherRate, lowerRateWithFee);
+
+        Assert.Equal(LoanChoice.Second, result.Value!.Cheaper);
+        Assert.Equal(23436.00m, result.Value.CostDifference);
+    }
+
+    [Fact]
+    public void Identical_Loans_Are_The_Same()
+    {
+        var loan = new LoanOffer(1000000m, 8.5m, 240);
+
+        var result = _planner.CompareLoans(loan, loan);
+
+        Assert.Equal(LoanChoice.Same, result.Value!.Cheaper);
+        Assert.Equal(0m, result.Value.CostDifference);
+        Assert.Equal(8678.23m, result.Value.First.MonthlyPayment);
+    }
+
+    [Fact]
+    public void A_Loan_Without_Interest_Costs_Nothing_Extra()
+    {
+        var result = _planner.CompareLoans(new LoanOffer(200000m, 0m, 10), new LoanOffer(200000m, 5m, 10));
+
+        Assert.Equal(0m, result.Value!.First.TotalInterest);
+        Assert.Equal(20000m, result.Value.First.MonthlyPayment);
+        Assert.Equal(LoanChoice.First, result.Value.Cheaper);
+        Assert.Equal(4611.90m, result.Value.CostDifference);
+    }
+
+    [Fact]
+    public void Swapping_The_Loans_Swaps_The_Answer()
+    {
+        var a = new LoanOffer(500000m, 10m, 60, 5000m);
+        var b = new LoanOffer(500000m, 10.5m, 60);
+
+        var forward = _planner.CompareLoans(a, b).Value!;
+        var backward = _planner.CompareLoans(b, a).Value!;
+
+        Assert.Equal(LoanChoice.First, forward.Cheaper);
+        Assert.Equal(LoanChoice.Second, backward.Cheaper);
+        Assert.Equal(forward.CostDifference, backward.CostDifference);
+        Assert.Equal(forward.First, backward.Second);
+    }
+
+    [Fact]
+    public void The_Cost_Difference_Is_Never_Negative()
+    {
+        var result = _planner.CompareLoans(new LoanOffer(500000m, 12m, 60), new LoanOffer(500000m, 8m, 60));
+
+        Assert.Equal(LoanChoice.Second, result.Value!.Cheaper);
+        Assert.True(result.Value.CostDifference > 0m);
+    }
+
+    [Theory]
+    [InlineData(0, 10, 60, 0, "First loan")]       // no loan amount
+    [InlineData(500000, -1, 60, 0, "First loan")]  // negative rate
+    [InlineData(500000, 10, 0, 0, "First loan")]   // too few months
+    [InlineData(500000, 10, 1201, 0, "First loan")] // too many months
+    [InlineData(500000, 10, 60, -1, "First loan")] // negative fee
+    public void CompareLoans_Rejects_An_Invalid_First_Loan(
+        double loan, double rate, int months, double fee, string expectedMessageStart)
+    {
+        var invalid = new LoanOffer((decimal)loan, (decimal)rate, months, (decimal)fee);
+
+        var result = _planner.CompareLoans(invalid, new LoanOffer(500000m, 10m, 60));
+
+        Assert.Equal(CalcError.InvalidInput, result.Error);
+        Assert.Contains(expectedMessageStart, result.Message);
+    }
+
+    [Fact]
+    public void CompareLoans_Says_Which_Loan_Is_Invalid_When_It_Is_The_Second()
+    {
+        var result = _planner.CompareLoans(new LoanOffer(500000m, 10m, 60), new LoanOffer(500000m, 10m, 0));
+
+        Assert.Equal(CalcError.InvalidInput, result.Error);
+        Assert.Contains("Second loan", result.Message);
+    }
+
+    [Fact]
+    public void CompareLoans_Reports_Overflow_For_An_Enormous_Fee()
+    {
+        var huge = new LoanOffer(500000m, 10m, 60, ProcessingFee: decimal.MaxValue);
+
+        var result = _planner.CompareLoans(huge, new LoanOffer(500000m, 10m, 60));
+
+        Assert.Equal(CalcError.Overflow, result.Error);
+    }
+
+    [Fact]
+    public void CompareLoans_Needs_Both_Loans()
+    {
+        var loan = new LoanOffer(500000m, 10m, 60);
+
+        Assert.Throws<ArgumentNullException>(() => _planner.CompareLoans(null!, loan));
+        Assert.Throws<ArgumentNullException>(() => _planner.CompareLoans(loan, null!));
+    }
 }
