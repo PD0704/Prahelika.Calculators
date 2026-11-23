@@ -5,13 +5,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Prahelika.Calculators</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>Prahelika Dutta (PD)</Authors>
-    <Description>A calculator library for .NET with basic, scientific and finance calculators.</Description>
+    <Description>A calculator library for .NET with basic, scientific, finance and India-focused calculators (FD, RD, PPF, GST split, income tax).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/PD0704/Prahelika.Calculators</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>calculator;math;finance;scientific</PackageTags>
+    <PackageTags>calculator;math;finance;scientific;india;gst;emi;income-tax</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
 

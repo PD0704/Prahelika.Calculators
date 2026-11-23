@@ -38,7 +38,7 @@ Both run on a free plan, so they sleep when nobody is using them. The first visi
 ## Use the library
 
 ```
-dotnet add package Prahelika.Calculators --prerelease
+dotnet add package Prahelika.Calculators
 ```
 
 ```csharp

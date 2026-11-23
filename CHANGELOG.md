@@ -7,6 +7,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-23
+
+New India-focused finance calculators, in the library, the API and the website. Nothing from 1.0.0 was changed or removed, so it is safe to update.
+
 ### Added
 - `SavingsCalculator` with `FixedDeposit` (FD), `RecurringDeposit` (RD) and `Ppf` maturity calculations, with quarterly compounding by default for deposits.
 - `GstSplitCalculator.GstSplit` splits GST into CGST and SGST halves (CGST + SGST always equals the total GST). The existing `Gst` method and `GstResult` are unchanged.
@@ -17,6 +21,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 - Result labels now write GST, CGST and SGST in capitals.
+- The package README no longer says "pre-release", and installing no longer needs `--prerelease`.
 
 ## [1.0.0] - 2026-11-16
 
@@ -77,7 +82,8 @@ First stable release. It includes everything from the 0.x releases: the Basic, S
 - Branch protection on `main`: pull requests and a passing CI check are required.
 - NuGet package metadata and package README. Placeholder package `0.0.1-alpha` published to reserve the package ID.
 
-[Unreleased]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.3.1-alpha...v1.0.0
 [0.3.1-alpha]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.3.0-alpha...v0.3.1-alpha
 [0.3.0-alpha]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.2.0-alpha...v0.3.0-alpha
