@@ -62,6 +62,20 @@ public enum FinanceCalculation
     Gst
 }
 
+public enum IndiaCalculation
+{
+    [Display(Name = "Fixed deposit (FD)")]
+    FixedDeposit,
+    [Display(Name = "Recurring deposit (RD)")]
+    RecurringDeposit,
+    [Display(Name = "PPF")]
+    Ppf,
+    [Display(Name = "GST split (CGST + SGST)")]
+    GstSplit,
+    [Display(Name = "Income tax (new regime)")]
+    IncomeTax
+}
+
 public static class EnumExtensions
 {
     /// <summary>The friendly name from a [Display(Name = "...")] attribute, or the enum name if there is none.</summary>
