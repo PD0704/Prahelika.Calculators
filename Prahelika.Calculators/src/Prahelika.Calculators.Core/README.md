@@ -3,14 +3,12 @@
 [![NuGet](https://img.shields.io/nuget/vpre/Prahelika.Calculators)](https://www.nuget.org/packages/Prahelika.Calculators)
 [![CI](https://github.com/PD0704/Prahelika.Calculators/actions/workflows/ci.yml/badge.svg)](https://github.com/PD0704/Prahelika.Calculators/actions/workflows/ci.yml)
 
-A small, well-tested .NET library with basic, scientific and finance calculators. Calculations never throw for bad user input: they return a result object that says what went wrong.
-
-> This is a pre-release (alpha). The API may still change before 1.0.
+A small, well-tested .NET library with basic, scientific, finance and India-focused calculators (FD, RD, PPF, GST split, income tax). Calculations never throw for bad user input: they return a result object that says what went wrong.
 
 ## Install
 
 ```
-dotnet add package Prahelika.Calculators --prerelease
+dotnet add package Prahelika.Calculators
 ```
 
 ## Quick start
@@ -64,11 +62,31 @@ var emi = finance.Emi(100000m, 12m, 12);
 
 if (emi.IsSuccess)
 {
-        Console.WriteLine(emi.Value.MonthlyPayment); // 8884.88
+    Console.WriteLine(emi.Value.MonthlyPayment); // 8884.88
 }
 ```
 
 Also available: simple and compound interest, loan amortisation schedule, SIP future value, return on investment and GST (added or taken out).
+
+### India finance: FD, RD, PPF, GST split and income tax
+
+```csharp
+using Prahelika.Calculators.Core.Finance;
+
+// Fixed deposit: 1,00,000 at 7% for 12 months, interest added every quarter
+var fd = new SavingsCalculator().FixedDeposit(100000m, 7m, 12);
+Console.WriteLine(fd.Value!.MaturityAmount);     // 107185.90
+
+// GST of 18% on 1000, split into CGST and SGST
+var split = new GstSplitCalculator().GstSplit(1000m, 18m);
+Console.WriteLine(split.Value!.Cgst);            // 90 (and SGST is 90)
+
+// Income-tax estimate, new regime, salaried, 15 lakh a year
+var tax = new IncomeTaxCalculator().EstimateNewRegime(1500000m);
+Console.WriteLine(tax.Value!.TotalTax);          // 97500
+```
+
+Also available: recurring deposit (`RecurringDeposit`) and PPF (`Ppf`). The income-tax slabs for FY 2026-27 live in one `IncomeTaxRules` table, so they can be updated or replaced. The estimate does not include surcharge. Check [incometax.gov.in](https://incometax.gov.in) for the latest rules.
 
 ## Handling errors
 
@@ -85,7 +103,7 @@ Only mistakes in your own code, such as an invalid number of decimal places in a
 
 ## Links
 
-- [Live demo](https://prahelika-calculators.onrender.com)
-- [Source code and API](https://github.com/PD0704/Prahelika.Calculators)
+- [Live demo](https://prahelika-calculators.onrender.com) and [live API with Swagger](https://prahelika-calculators-api.onrender.com)
+- [Source code](https://github.com/PD0704/Prahelika.Calculators)
 - [Changelog](https://github.com/PD0704/Prahelika.Calculators/blob/main/CHANGELOG.md)
 - Licence: MIT
