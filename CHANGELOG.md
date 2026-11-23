@@ -13,6 +13,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - `IncomeTaxCalculator.EstimateNewRegime` estimates income tax under the new regime for FY 2026-27: slab-by-slab breakdown, standard deduction, rebate with marginal relief, and 4% cess. The slabs and limits live in one `IncomeTaxRules` table, so they can be updated each year or replaced.
 - API endpoints for the new calculators, under `/api/finance`: `fixed-deposit`, `recurring-deposit`, `ppf`, `gst-split` and `income-tax`.
 - Website page **India finance** with the FD, RD, PPF, GST split (CGST and SGST) and income-tax calculators. The income-tax result shows a slab-by-slab breakdown.
+- `Dockerfile.api` to run the API as its own service, and a live API with Swagger documentation.
 
 ### Changed
 - Result labels now write GST, CGST and SGST in capitals.
