@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());   // enums as names ("First"), not numbers
 });
 
 // Lets errors be written in the standard problem-details format.
@@ -24,6 +25,7 @@ builder.Services.AddSingleton<IFinanceCalculator, FinanceCalculator>(); // depen
 builder.Services.AddSingleton<ISavingsCalculator, SavingsCalculator>();           // dependency injection
 builder.Services.AddSingleton<IGstSplitCalculator, GstSplitCalculator>();         // dependency injection
 builder.Services.AddSingleton<IIncomeTaxCalculator, IncomeTaxCalculator>();       // dependency injection
+builder.Services.AddSingleton<ILoanPlanner, LoanPlanner>();                       // dependency injection
 
 var app = builder.Build();
 
@@ -41,6 +43,7 @@ app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 app.MapBasicEndpoints();
 app.MapScientificEndpoints();
 app.MapFinanceEndpoints();
+app.MapLoanEndpoints();
 
 app.Run();
 
