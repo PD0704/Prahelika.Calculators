@@ -10,6 +10,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ### Added
 - `LoanPlanner.Prepay` shows what a lump-sum prepayment does to a loan: the new number of months, and the interest saved. The EMI stays the same.
 - `LoanPlanner.CompareLoans` compares two loans side by side: EMI, total interest, processing fee and total cost of each, and which is cheaper overall.
+- `LoanPlanner.MaxLoanAmount` answers "how much can I borrow?": the largest loan whose EMI fits the monthly payment you can afford, for a given rate and number of months.
 
 ## [1.1.0] - 2026-11-23
 
