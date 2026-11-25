@@ -27,4 +27,12 @@ public interface ILoanPlanner
     /// <see cref="FinanceCalculator.Emi"/>. For a fair comparison the two loans should borrow about the same amount.
     /// </summary>
     CalcResult<LoanComparison> CompareLoans(LoanOffer first, LoanOffer second);
+
+    /// <summary>
+    /// "How much can I borrow?" The largest loan whose EMI fits the monthly payment you can afford:
+    /// the EMI calculation worked backwards. The rate is a percentage per year. Months must be between 1 and 1200.
+    /// The loan amount is rounded down, so the EMI for it (see <see cref="FinanceCalculator.Emi"/>) never goes above
+    /// the monthly payment.
+    /// </summary>
+    CalcResult<BorrowingResult> MaxLoanAmount(decimal monthlyPayment, decimal annualRatePercent, int months);
 }

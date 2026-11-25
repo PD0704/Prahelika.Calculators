@@ -264,4 +264,101 @@ public class LoanPlannerTests
         Assert.Throws<ArgumentNullException>(() => _planner.CompareLoans(null!, loan));
         Assert.Throws<ArgumentNullException>(() => _planner.CompareLoans(loan, null!));
     }
+
+    // ---------- How much can I borrow? ----------
+
+    [Theory]
+    [InlineData(20000, 9, 240, 2222899.08, 4800000, 2577100.92)]
+    [InlineData(8997.26, 9, 240, 1000000.04, 2159342.40, 1159342.36)]
+    [InlineData(8884.88, 12, 12, 100000.01, 106618.56, 6618.55)]
+    [InlineData(5000, 7.5, 60, 249526.54, 300000, 50473.46)]
+    [InlineData(50000, 8.5, 360, 6502682.17, 18000000, 11497317.83)]
+    [InlineData(250000, 10, 6, 1457204.29, 1500000, 42795.71)]
+    [InlineData(10000, 12, 1, 9900.99, 10000, 99.01)]          // a one-month loan
+    [InlineData(1, 24, 1200, 49.99, 1200, 1150.01)]            // a very long loan
+    [InlineData(10000, 0, 12, 120000, 120000, 0)]              // no interest
+    public void MaxLoanAmount_Matches_Known_Values(
+        double payment, double rate, int months, double maxLoan, double totalPayment, double totalInterest)
+    {
+        var result = _planner.MaxLoanAmount((decimal)payment, (decimal)rate, months);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal((decimal)payment, result.Value!.MonthlyPayment);
+        Assert.Equal((decimal)maxLoan, result.Value.MaxLoanAmount);
+        Assert.Equal((decimal)totalPayment, result.Value.TotalPayment);
+        Assert.Equal((decimal)totalInterest, result.Value.TotalInterest);
+    }
+
+    [Fact]
+    public void MaxLoanAmount_Round_Trips_With_The_Emi_Calculator()
+    {
+        var finance = new FinanceCalculator();
+
+        foreach (decimal payment in new[] { 1000m, 8884.88m, 12345.67m, 50000m })
+            foreach (decimal rate in new[] { 0m, 6.5m, 9m, 12m, 18m })
+                foreach (int months in new[] { 1, 12, 60, 240, 360 })
+                {
+                    var borrowing = _planner.MaxLoanAmount(payment, rate, months).Value!;
+                    var emi = finance.Emi(borrowing.MaxLoanAmount, rate, months).Value!;
+
+                    // Rounding down means the EMI never goes above the payment, and it is within a paisa of it.
+                    Assert.True(emi.MonthlyPayment <= payment,
+                        $"EMI {emi.MonthlyPayment} is above {payment} (rate {rate}, months {months}).");
+                    Assert.True(payment - emi.MonthlyPayment <= 0.01m,
+                        $"EMI {emi.MonthlyPayment} is too far below {payment} (rate {rate}, months {months}).");
+                }
+    }
+
+    [Fact]
+    public void A_Longer_Term_Allows_A_Bigger_Loan()
+    {
+        decimal shorter = _planner.MaxLoanAmount(20000m, 9m, 120).Value!.MaxLoanAmount;
+        decimal longer = _planner.MaxLoanAmount(20000m, 9m, 240).Value!.MaxLoanAmount;
+
+        Assert.True(longer > shorter);
+    }
+
+    [Fact]
+    public void A_Higher_Rate_Allows_A_Smaller_Loan()
+    {
+        decimal cheap = _planner.MaxLoanAmount(20000m, 8m, 240).Value!.MaxLoanAmount;
+        decimal dear = _planner.MaxLoanAmount(20000m, 12m, 240).Value!.MaxLoanAmount;
+
+        Assert.True(cheap > dear);
+    }
+
+    [Fact]
+    public void MaxLoanAmount_Is_Rounded_Down_To_The_Chosen_Decimal_Places()
+    {
+        var whole = new LoanPlanner(0);
+
+        var result = whole.MaxLoanAmount(20000m, 9m, 240);
+
+        Assert.Equal(2222899m, result.Value!.MaxLoanAmount);     // 2222899.08 rounded down
+        Assert.Equal(2577101m, result.Value.TotalInterest);
+    }
+
+    [Theory]
+    [InlineData(0, 9, 240)]       // nothing affordable
+    [InlineData(-100, 9, 240)]    // negative payment
+    [InlineData(20000, -1, 240)]  // negative rate
+    [InlineData(20000, 9, 0)]     // too few months
+    [InlineData(20000, 9, 1201)]  // too many months
+    public void MaxLoanAmount_Rejects_Invalid_Input(double payment, double rate, int months)
+    {
+        var result = _planner.MaxLoanAmount((decimal)payment, (decimal)rate, months);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(CalcError.InvalidInput, result.Error);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(10)]
+    public void MaxLoanAmount_Reports_Overflow_For_Huge_Payments(double rate)
+    {
+        var result = _planner.MaxLoanAmount(decimal.MaxValue, (decimal)rate, 12);
+
+        Assert.Equal(CalcError.Overflow, result.Error);
+    }
 }

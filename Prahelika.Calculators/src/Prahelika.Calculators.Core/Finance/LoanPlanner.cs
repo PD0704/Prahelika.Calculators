@@ -167,4 +167,81 @@ public sealed class LoanPlanner : ILoanPlanner
         return CalcResult<LoanOfferSummary>.Success(new LoanOfferSummary(
             loan.MonthlyPayment, loan.TotalPayment, loan.TotalInterest, fee, loan.TotalInterest + fee));
     }
+
+    /// <inheritdoc />
+    public CalcResult<BorrowingResult> MaxLoanAmount(decimal monthlyPayment, decimal annualRatePercent, int months)
+    {
+        if (monthlyPayment <= 0m)
+        {
+            return InvalidBorrowing("The monthly payment must be above zero.");
+        }
+
+        if (annualRatePercent < 0m)
+        {
+            return InvalidBorrowing("The rate cannot be negative.");
+        }
+
+        if (months < 1 || months > FinanceCalculator.MaxMonths)
+        {
+            return InvalidBorrowing($"The number of months must be between 1 and {FinanceCalculator.MaxMonths}.");
+        }
+
+        try
+        {
+            // Rounded down, so the EMI for this loan can never be more than the payment.
+            decimal maxLoan = decimal.Round(
+                ExactMaxLoan(monthlyPayment, annualRatePercent, months), DecimalPlaces, MidpointRounding.ToZero);
+            decimal totalPayment = monthlyPayment * months;
+
+            return CalcResult<BorrowingResult>.Success(
+                new BorrowingResult(monthlyPayment, maxLoan, totalPayment, totalPayment - maxLoan));
+        }
+        catch (OverflowException)
+        {
+            return CalcResult<BorrowingResult>.Failure(CalcError.Overflow, "The result is too large to represent.");
+        }
+    }
+
+    // P = EMI x (1 - (1 + r)^-n) / r, where r is the monthly rate: the EMI formula solved for the loan amount.
+    private static decimal ExactMaxLoan(decimal monthlyPayment, decimal annualRatePercent, int months)
+    {
+        if (annualRatePercent == 0m)
+        {
+            return monthlyPayment * months;
+        }
+
+        decimal monthlyRate = annualRatePercent / 12m / 100m;
+        decimal discount = Power(1m / (1m + monthlyRate), months);
+        decimal numerator = 1m - discount;
+
+        // A rate so tiny that 1 + r rounds to 1 behaves like no interest at all.
+        return numerator == 0m
+            ? monthlyPayment * months
+            : monthlyPayment * numerator / monthlyRate;
+    }
+
+    // baseValue ^ exponent, by repeated squaring.
+    private static decimal Power(decimal baseValue, int exponent)
+    {
+        decimal result = 1m;
+        decimal factor = baseValue;
+
+        for (int remaining = exponent; remaining > 0; remaining >>= 1)
+        {
+            if ((remaining & 1) == 1)
+            {
+                result *= factor;
+            }
+
+            if (remaining > 1)
+            {
+                factor *= factor;
+            }
+        }
+
+        return result;
+    }
+
+    private static CalcResult<BorrowingResult> InvalidBorrowing(string message) =>
+        CalcResult<BorrowingResult>.Failure(CalcError.InvalidInput, message);
 }
