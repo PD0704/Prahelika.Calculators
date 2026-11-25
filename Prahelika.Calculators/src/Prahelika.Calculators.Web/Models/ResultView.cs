@@ -59,6 +59,9 @@ public sealed class ResultView
         return view;
     }
 
+    /// <summary>Formats an amount of money like the result boxes do: two decimals, with Indian digit grouping where the server supports it.</summary>
+    public static string Money(decimal value) => value.ToString("N2", MoneyCulture);
+
     private void AddTable(IEnumerable items, bool money)
     {
         var list = items.Cast<object>().ToList();

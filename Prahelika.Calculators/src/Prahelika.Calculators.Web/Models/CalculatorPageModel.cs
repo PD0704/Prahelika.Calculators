@@ -19,6 +19,13 @@ public abstract class CalculatorPageModel : PageModel
         ErrorMessage = message;
     }
 
+    /// <summary>Shows a result that the page built itself, such as a side-by-side table.</summary>
+    protected void Display(ResultView view)
+    {
+        ErrorMessage = null;
+        Result = view;
+    }
+
     protected void Show<T>(CalcResult<T> calcResult, bool money = false)
     {
         if (calcResult.IsSuccess)

@@ -1,0 +1,105 @@
+﻿@page
+@model LoansModel
+@using Prahelika.Calculators.Web.Models
+@{
+    ViewData["Title"] = "Loan tools";
+}
+
+<h1 class="h2 mb-3">Loan tools</h1>
+
+<ul class="nav nav-pills mb-4">
+    @foreach (var tool in Enum.GetValues<LoanTool>())
+    {
+        <li class="nav-item">
+            <a class="nav-link @(tool == Model.Tool ? "active" : "")"
+               asp-page="/Loans" asp-route-tool="@tool">@tool.DisplayName()</a>
+        </li>
+    }
+</ul>
+
+<h2 class="h4">@Model.Tool.DisplayName()</h2>
+<p class="text-muted">@Model.Description</p>
+
+<form method="post" class="row g-3" style="max-width: 32rem">
+    @if (Model.Tool == LoanTool.Prepayment)
+    {
+        <div class="col-12">
+            <label asp-for="Amount" class="form-label">Loan amount</label>
+            <input asp-for="Amount" type="number" step="any" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Rate" class="form-label">Interest rate per year (%)</label>
+            <input asp-for="Rate" type="number" step="any" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Months" class="form-label">Loan term (months, 1 to 1200)</label>
+            <input asp-for="Months" type="number" step="1" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="PrepaymentMonth" class="form-label">Prepayment month (you pay the lump sum right after this EMI)</label>
+            <input asp-for="PrepaymentMonth" type="number" step="1" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="PrepaymentAmount" class="form-label">Prepayment amount</label>
+            <input asp-for="PrepaymentAmount" type="number" step="any" class="form-control" />
+        </div>
+    }
+    else if (Model.Tool == LoanTool.Compare)
+    {
+        <h3 class="h5 mt-3">First loan</h3>
+        <div class="col-12">
+            <label asp-for="Amount" class="form-label">Loan amount</label>
+            <input asp-for="Amount" type="number" step="any" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Rate" class="form-label">Interest rate per year (%)</label>
+            <input asp-for="Rate" type="number" step="any" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Months" class="form-label">Loan term (months)</label>
+            <input asp-for="Months" type="number" step="1" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Fee" class="form-label">Processing fee (optional)</label>
+            <input asp-for="Fee" type="number" step="any" class="form-control" />
+        </div>
+
+        <h3 class="h5 mt-4">Second loan</h3>
+        <div class="col-12">
+            <label asp-for="SecondAmount" class="form-label">Loan amount</label>
+            <input asp-for="SecondAmount" type="number" step="any" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="SecondRate" class="form-label">Interest rate per year (%)</label>
+            <input asp-for="SecondRate" type="number" step="any" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="SecondMonths" class="form-label">Loan term (months)</label>
+            <input asp-for="SecondMonths" type="number" step="1" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="SecondFee" class="form-label">Processing fee (optional)</label>
+            <input asp-for="SecondFee" type="number" step="any" class="form-control" />
+        </div>
+    }
+    else
+    {
+        <div class="col-12">
+            <label asp-for="MonthlyPayment" class="form-label">Monthly payment you can afford</label>
+            <input asp-for="MonthlyPayment" type="number" step="any" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Rate" class="form-label">Interest rate per year (%)</label>
+            <input asp-for="Rate" type="number" step="any" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Months" class="form-label">Loan term (months, 1 to 1200)</label>
+            <input asp-for="Months" type="number" step="1" class="form-control" />
+        </div>
+    }
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Calculate</button>
+    </div>
+</form>
+<partial name="_Result" model="Model" />
