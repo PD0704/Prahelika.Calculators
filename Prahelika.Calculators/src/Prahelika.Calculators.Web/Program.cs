@@ -18,6 +18,7 @@ builder.Services.AddSingleton<IFinanceCalculator, FinanceCalculator>();
 builder.Services.AddSingleton<ISavingsCalculator, SavingsCalculator>();
 builder.Services.AddSingleton<IGstSplitCalculator, GstSplitCalculator>();
 builder.Services.AddSingleton<IIncomeTaxCalculator, IncomeTaxCalculator>();
+builder.Services.AddSingleton<ILoanPlanner, LoanPlanner>();
 
 var app = builder.Build();
 

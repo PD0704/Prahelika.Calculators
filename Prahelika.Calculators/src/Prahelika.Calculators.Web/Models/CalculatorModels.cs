@@ -76,6 +76,16 @@ public enum IndiaCalculation
     IncomeTax
 }
 
+public enum LoanTool
+{
+    [Display(Name = "Prepayment")]
+    Prepayment,
+    [Display(Name = "Compare two loans")]
+    Compare,
+    [Display(Name = "How much can I borrow?")]
+    Borrow
+}
+
 public static class EnumExtensions
 {
     /// <summary>The friendly name from a [Display(Name = "...")] attribute, or the enum name if there is none.</summary>
