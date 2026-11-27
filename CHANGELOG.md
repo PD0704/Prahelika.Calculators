@@ -7,6 +7,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- A **statistics calculator** in the library: mean, median, mode, and population and sample standard deviation (`IStatisticsCalculator`).
+
 ## [1.2.0] - 2026-11-27
 
 ### Added
