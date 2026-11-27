@@ -9,6 +9,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 - A **statistics calculator** in the library: mean, median, mode, and population and sample standard deviation (`IStatisticsCalculator`).
+- A **unit converter** in the library: length, weight, temperature, area and volume (`IUnitConverter`).
 
 ## [1.2.0] - 2026-11-27
 
