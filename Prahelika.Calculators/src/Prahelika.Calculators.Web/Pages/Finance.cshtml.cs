@@ -132,4 +132,41 @@ public class FinanceModel(IFinanceCalculator calculator) : CalculatorPageModel
                 break;
         }
     }
+
+    // The "Download CSV" button posts the same form here instead of to OnPost (handler name: Csv).
+    public IActionResult OnPostCsv()
+    {
+        if (!ModelState.IsValid)
+        {
+            Fail("Please enter valid numbers. Months must be a whole number.");
+            return Page();
+        }
+
+        if (Calculation != FinanceCalculation.Amortization)
+        {
+            Fail("The CSV download is only available for the loan schedule.");
+            return Page();
+        }
+
+        var missing = new List<string>();
+        if (Amount is null) missing.Add(AmountLabel);
+        if (Rate is null) missing.Add(RateLabel);
+        if (Months is null) missing.Add("Time (months)");
+
+        if (missing.Count > 0)
+        {
+            Fail("Please fill in: " + string.Join(", ", missing) + ".");
+            return Page();
+        }
+
+        var schedule = calculator.AmortizationSchedule(Amount!.Value, Rate!.Value, Months!.Value);
+        if (!schedule.IsSuccess)
+        {
+            Show(schedule);   // shows the error message
+            return Page();
+        }
+
+        string csv = LoanScheduleCsv.Build(schedule.Value!);
+        return File(LoanScheduleCsv.ToBytes(csv), LoanScheduleCsv.ContentType, LoanScheduleCsv.FileName);
+    }
 }

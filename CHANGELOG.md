@@ -14,6 +14,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - API endpoints for the loan tools, under `/api/loans`: `prepayment`, `compare` and `max-amount`. Results that are choices, such as the cheaper loan, are written as text.
 - Website page **Loan tools** with loan prepayment, loan comparison (side by side) and "how much can I borrow" calculators.
 - The **Loan schedule** page now shows two charts: the balance over time, and how much of each payment is principal and how much is interest.
+- A **Download CSV** button on the Loan schedule page, to open the repayment schedule in Excel or any spreadsheet.
 
 ## [1.1.0] - 2026-11-23
 
