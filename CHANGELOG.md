@@ -7,6 +7,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-27
+
 ### Added
 - `LoanPlanner.Prepay` shows what a lump-sum prepayment does to a loan: the new number of months, and the interest saved. The EMI stays the same.
 - `LoanPlanner.CompareLoans` compares two loans side by side: EMI, total interest, processing fee and total cost of each, and which is cheaper overall.
@@ -91,7 +93,8 @@ First stable release. It includes everything from the 0.x releases: the Basic, S
 - Branch protection on `main`: pull requests and a passing CI check are required.
 - NuGet package metadata and package README. Placeholder package `0.0.1-alpha` published to reserve the package ID.
 
-[Unreleased]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.3.1-alpha...v1.0.0
 [0.3.1-alpha]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.3.0-alpha...v0.3.1-alpha

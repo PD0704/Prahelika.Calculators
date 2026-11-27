@@ -3,7 +3,7 @@
 [![NuGet](https://img.shields.io/nuget/vpre/Prahelika.Calculators)](https://www.nuget.org/packages/Prahelika.Calculators)
 [![CI](https://github.com/PD0704/Prahelika.Calculators/actions/workflows/ci.yml/badge.svg)](https://github.com/PD0704/Prahelika.Calculators/actions/workflows/ci.yml)
 
-A small, well-tested .NET library with basic, scientific, finance and India-focused calculators (FD, RD, PPF, GST split, income tax). Calculations never throw for bad user input: they return a result object that says what went wrong.
+A small, well-tested .NET library with basic, scientific, finance and India-focused calculators (FD, RD, PPF, GST split, income tax) and loan planning tools (prepayment, loan comparison, how much can I borrow). Calculations never throw for bad user input: they return a result object that says what went wrong.
 
 ## Install
 
@@ -87,6 +87,31 @@ Console.WriteLine(tax.Value!.TotalTax);          // 97500
 ```
 
 Also available: recurring deposit (`RecurringDeposit`) and PPF (`Ppf`). The income-tax slabs for FY 2026-27 live in one `IncomeTaxRules` table, so they can be updated or replaced. The estimate does not include surcharge. Check [incometax.gov.in](https://incometax.gov.in) for the latest rules.
+
+### Loan planning: prepayment, comparing loans, how much can I borrow
+
+```csharp
+using Prahelika.Calculators.Core.Finance;
+
+var planner = new LoanPlanner();
+
+// 1,00,000 at 12% for 12 months. After the 6th EMI, pay 20,000 extra.
+var prepay = planner.Prepay(100000m, 12m, 12, prepaymentMonth: 6, prepaymentAmount: 20000m);
+Console.WriteLine(prepay.Value!.NewMonths);       // 10
+Console.WriteLine(prepay.Value!.InterestSaved);   // 1075.12
+
+// Two offers side by side, including the processing fee
+var comparison = planner.CompareLoans(
+    new LoanOffer(1000000m, 9m, 240, ProcessingFee: 5000m),
+    new LoanOffer(1000000m, 9.2m, 240));
+Console.WriteLine(comparison.Value!.Cheaper);     // First, Second or Same
+
+// "I can pay 20,000 a month. How much can I borrow?" (9% for 20 years)
+var borrow = planner.MaxLoanAmount(20000m, 9m, 240);
+Console.WriteLine(borrow.Value!.MaxLoanAmount);   // 2222899.08
+```
+
+`Prepay` assumes the same EMI continues after the lump sum, so the loan ends sooner. `MaxLoanAmount` rounds down, so the EMI never goes above your monthly payment.
 
 ## Handling errors
 
