@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
+using System.Net;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+
 
 
 namespace Prahelika.Calculators.Web.Tests;
@@ -311,5 +314,73 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
             new() { ["Tool"] = "Borrow", ["MonthlyPayment"] = "20000", ["Rate"] = "9" });
 
         Assert.Contains("Please fill in", html);
+    }
+
+    [Fact]
+    public async Task Finance_Loan_Schedule_Includes_The_Chart_Data()
+    {
+        string html = await PostFormAsync("/Finance?calculation=Amortization",
+            new() { ["Calculation"] = "Amortization", ["Amount"] = "100000", ["Rate"] = "12", ["Months"] = "12" });
+
+        // The two charts, and the scripts that draw them.
+        Assert.Contains("id=\"balance-chart\"", html);
+        Assert.Contains("id=\"split-chart\"", html);
+        Assert.Matches("<script src=\"[^\"]*chart\\.umd[^\"]*\"", html);   // the Chart.js library
+        Assert.Matches("<script src=\"[^\"]*loan-chart[^\"]*\"", html);    // the script that draws the charts
+
+        // The numbers behind them are in the page as JSON.
+        var match = Regex.Match(
+            html, "<script id=\"loan-chart-data\" type=\"application/json\">(.*?)</script>", RegexOptions.Singleline);
+        Assert.True(match.Success, "The chart data was not found in the page.");
+
+        using var document = JsonDocument.Parse(match.Groups[1].Value);
+        var data = document.RootElement;
+
+        Assert.Equal(12, data.GetProperty("months").GetArrayLength());
+        Assert.Equal(1, data.GetProperty("months")[0].GetInt32());
+        Assert.Equal(12, data.GetProperty("months")[11].GetInt32());
+        Assert.Equal(12, data.GetProperty("balance").GetArrayLength());
+        Assert.Equal(12, data.GetProperty("principal").GetArrayLength());
+        Assert.Equal(12, data.GetProperty("interest").GetArrayLength());
+
+        Assert.Equal(1000m, data.GetProperty("interest")[0].GetDecimal());       // 1% of 100,000
+        Assert.Equal(92115.12m, data.GetProperty("balance")[0].GetDecimal());    // 100,000 - (8,884.88 - 1,000)
+        Assert.Equal(0m, data.GetProperty("balance")[11].GetDecimal());          // fully repaid
+    }
+
+    [Fact]
+    public async Task Finance_Emi_Has_No_Chart()
+    {
+        string html = await PostFormAsync("/Finance?calculation=Emi",
+            new() { ["Calculation"] = "Emi", ["Amount"] = "100000", ["Rate"] = "12", ["Months"] = "12" });
+
+        Assert.DoesNotContain("loan-chart-data", html);
+        Assert.DoesNotContain("chart.umd.min.js", html);
+    }
+
+    [Fact]
+    public async Task Finance_Loan_Schedule_With_Bad_Input_Has_No_Chart()
+    {
+        string html = await PostFormAsync("/Finance?calculation=Amortization",
+            new() { ["Calculation"] = "Amortization", ["Amount"] = "0", ["Rate"] = "12", ["Months"] = "12" });
+
+        Assert.Contains("alert-danger", html);
+        Assert.DoesNotContain("loan-chart-data", html);
+    }
+
+    [Fact]
+    public async Task The_Chart_Library_File_Is_Served()
+    {
+        var response = await _client.GetAsync("/lib/chart.js/dist/chart.umd.js");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task The_Chart_Script_Is_Served()
+    {
+        var response = await _client.GetAsync("/js/loan-chart.js");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 }

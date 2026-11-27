@@ -13,6 +13,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - `LoanPlanner.MaxLoanAmount` answers "how much can I borrow?": the largest loan whose EMI fits the monthly payment you can afford, for a given rate and number of months.
 - API endpoints for the loan tools, under `/api/loans`: `prepayment`, `compare` and `max-amount`. Results that are choices, such as the cheaper loan, are written as text.
 - Website page **Loan tools** with loan prepayment, loan comparison (side by side) and "how much can I borrow" calculators.
+- The **Loan schedule** page now shows two charts: the balance over time, and how much of each payment is principal and how much is interest.
 
 ## [1.1.0] - 2026-11-23
 

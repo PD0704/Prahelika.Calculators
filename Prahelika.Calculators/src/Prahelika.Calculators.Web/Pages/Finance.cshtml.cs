@@ -30,6 +30,9 @@ public class FinanceModel(IFinanceCalculator calculator) : CalculatorPageModel
     [BindProperty]
     public GstMode Mode { get; set; } = GstMode.Exclusive;
 
+    /// <summary>The chart numbers as JSON, only when a loan schedule has just been calculated.</summary>
+    public string? ChartJson { get; private set; }
+
     public string AmountLabel => Calculation switch
     {
         FinanceCalculation.SimpleInterest or FinanceCalculation.CompoundInterest => "Principal (starting amount)",
@@ -107,8 +110,17 @@ public class FinanceModel(IFinanceCalculator calculator) : CalculatorPageModel
                 Show(calculator.Emi(amount, rate, Months!.Value), money: true);
                 break;
             case FinanceCalculation.Amortization:
-                Show(calculator.AmortizationSchedule(amount, rate, Months!.Value), money: true);
-                break;
+                {
+                    var schedule = calculator.AmortizationSchedule(amount, rate, Months!.Value);
+                    Show(schedule, money: true);
+
+                    if (schedule.IsSuccess)
+                    {
+                        ChartJson = LoanChartData.From(schedule.Value!).ToJson();
+                    }
+
+                    break;
+                }
             case FinanceCalculation.Sip:
                 Show(calculator.SipFutureValue(amount, rate, Months!.Value), money: true);
                 break;

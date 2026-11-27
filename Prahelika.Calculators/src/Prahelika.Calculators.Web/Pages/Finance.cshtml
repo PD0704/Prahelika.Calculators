@@ -88,3 +88,33 @@
     </div>
 </form>
 <partial name="_Result" model="Model" />
+
+            
+@if (Model.ChartJson is not null)
+{
+    <div class="card mt-4">
+        <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted">Balance over time</h2>
+            <div style="position: relative; height: 18rem">
+                <canvas id="balance-chart" role="img"
+                        aria-label="Line chart of the loan balance after each monthly payment. The table above has the same numbers."></canvas>
+            </div>
+
+            <h2 class="h6 text-uppercase text-muted mt-4">Principal and interest in each payment</h2>
+            <div style="position: relative; height: 18rem">
+                <canvas id="split-chart" role="img"
+                        aria-label="Stacked area chart of how much of each payment is principal and how much is interest. The table above has the same numbers."></canvas>
+            </div>
+
+            <script id="loan-chart-data" type="application/json">@Html.Raw(Model.ChartJson)</script>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (Model.ChartJson is not null)
+    {
+        <script src="~/lib/chart.js/dist/chart.umd.js"></script>
+        <script src="~/js/loan-chart.js" asp-append-version="true"></script>
+    }
+}
