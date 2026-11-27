@@ -19,8 +19,10 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
     });
 
     // Razor Pages protects forms with a hidden token. Load the page, read the token,
-    // and send it back with the form, like a browser does.
-    private async Task<string> PostFormAsync(string url, Dictionary<string, string> fields)
+    // and send it back with the form, like a browser does. The form can be sent to a
+    // different address than the one the token was read from (for example, a named handler).
+    private async Task<HttpResponseMessage> PostFormResponseAsync(
+        string url, Dictionary<string, string> fields, string? postUrl = null)
     {
         var pageResponse = await _client.GetAsync(url);
         Assert.True(pageResponse.IsSuccessStatusCode,
@@ -30,9 +32,15 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
         Assert.True(match.Success, "The page has no anti-forgery token.");
 
         fields["__RequestVerificationToken"] = match.Groups[1].Value;
-        var response = await _client.PostAsync(url, new FormUrlEncodedContent(fields));
+        var response = await _client.PostAsync(postUrl ?? url, new FormUrlEncodedContent(fields));
         Assert.True(response.IsSuccessStatusCode,
-    $"POST to {url} returned {(int)response.StatusCode}, redirect to: {response.Headers.Location}");
+            $"POST to {postUrl ?? url} returned {(int)response.StatusCode}, redirect to: {response.Headers.Location}");
+        return response;
+    }
+
+    private async Task<string> PostFormAsync(string url, Dictionary<string, string> fields)
+    {
+        var response = await PostFormResponseAsync(url, fields);
         return await response.Content.ReadAsStringAsync();
     }
 
@@ -382,5 +390,59 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
         var response = await _client.GetAsync("/js/loan-chart.js");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Finance_Loan_Schedule_Has_A_Download_Button_But_Emi_Does_Not()
+    {
+        var schedule = await _client.GetStringAsync("/Finance?calculation=Amortization");
+        var emi = await _client.GetStringAsync("/Finance?calculation=Emi");
+
+        Assert.Contains("Download CSV", schedule);
+        Assert.DoesNotContain("Download CSV", emi);
+    }
+
+    [Fact]
+    public async Task Finance_Loan_Schedule_Downloads_As_A_CSV_File()
+    {
+        var response = await PostFormResponseAsync(
+            "/Finance?calculation=Amortization",
+            new() { ["Calculation"] = "Amortization", ["Amount"] = "100000", ["Rate"] = "12", ["Months"] = "12" },
+            postUrl: "/Finance?calculation=Amortization&handler=Csv");
+
+        Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Equal("loan-schedule.csv", response.Content.Headers.ContentDisposition?.FileName?.Trim('"'));
+
+        string csv = await response.Content.ReadAsStringAsync();
+        var lines = csv.TrimStart('\uFEFF').Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+
+        Assert.Equal("Month,Payment,Principal,Interest,Balance", lines[0]);
+        Assert.Equal(13, lines.Length);                                      // the header and 12 months
+        Assert.Equal("1,8884.88,7884.88,1000.00,92115.12", lines[1]);
+        Assert.EndsWith(",0.00", lines[12]);                                 // fully repaid
+    }
+
+    [Fact]
+    public async Task Finance_Csv_With_Bad_Input_Shows_The_Error_Instead_Of_A_File()
+    {
+        var response = await PostFormResponseAsync(
+            "/Finance?calculation=Amortization",
+            new() { ["Calculation"] = "Amortization", ["Amount"] = "0", ["Rate"] = "12", ["Months"] = "12" },
+            postUrl: "/Finance?calculation=Amortization&handler=Csv");
+
+        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
+        Assert.Contains("alert-danger", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Finance_Csv_With_Missing_Fields_Asks_For_Them()
+    {
+        var response = await PostFormResponseAsync(
+            "/Finance?calculation=Amortization",
+            new() { ["Calculation"] = "Amortization", ["Amount"] = "100000" },
+            postUrl: "/Finance?calculation=Amortization&handler=Csv");
+
+        Assert.Contains("Please fill in", await response.Content.ReadAsStringAsync());
     }
 }
