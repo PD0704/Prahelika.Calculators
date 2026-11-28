@@ -1032,6 +1032,78 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
 
         Assert.Contains("themechange", js);
         Assert.Contains("--bs-body-color", js);
-    } 
+    }
+    #endregion
+
+    #region History
+
+    [Fact]
+    public async Task A_Result_Box_Carries_The_Text_For_The_History()
+    {
+        string html = await PostFormAsync("/Basic", new() { ["Operation"] = "Divide", ["A"] = "7", ["B"] = "2" });
+
+        Assert.Contains("id=\"result-card\"", html);
+        Assert.Contains("data-history-result=\"3.5\"", html);
+    }
+
+    [Fact]
+    public async Task A_Record_Result_Gives_Its_First_Rows_To_The_History()
+    {
+        string html = await PostFormAsync("/Finance?calculation=Emi",
+            new() { ["Calculation"] = "Emi", ["Amount"] = "100000", ["Rate"] = "12", ["Months"] = "12" });
+
+        Assert.Matches("data-history-result=\"[^\"]*Monthly Payment: [^\"]*8,884\\.88", html);
+    }
+
+    [Fact]
+    public async Task The_Statistics_History_Text_Starts_With_The_Mean_And_Median()
+    {
+        string html = await PostFormAsync("/Statistics", new() { ["Values"] = "2, 4, 4, 4, 5, 5, 7, 9" });
+
+        Assert.Matches("data-history-result=\"Mean:[^\"]*5[^\"]*Median:[^\"]*4\\.5", html);
+    }
+
+    [Fact]
+    public async Task An_Error_Has_No_Result_Box_To_Remember()
+    {
+        string html = await PostFormAsync("/Basic", new() { ["Operation"] = "Divide", ["A"] = "10", ["B"] = "0" });
+
+        Assert.DoesNotContain("id=\"result-card\"", html);
+    }
+
+    [Fact]
+    public async Task A_Page_That_Was_Only_Opened_Has_No_Result_Box()
+    {
+        string html = await _client.GetStringAsync("/Basic");
+
+        Assert.DoesNotContain("id=\"result-card\"", html);
+    }
+
+    [Theory]
+    [MemberData(nameof(AllPages))]
+    public async Task Every_Page_Has_The_History_Button_Panel_And_Script(string url)
+    {
+        string html = await _client.GetStringAsync(url);
+
+        Assert.Contains("id=\"history-toggle\"", html);
+        Assert.Contains("id=\"history-panel\"", html);
+        Assert.Contains("id=\"history-list\"", html);
+        Assert.Contains("id=\"history-clear\"", html);
+        Assert.Matches("<script src=\"[^\"]*history[^\"]*\"", html);
+    }
+
+    [Fact]
+    public async Task The_History_Script_Is_Served_And_Never_Writes_Html()
+    {
+        var response = await _client.GetAsync("/js/history.js");
+
+        response.EnsureSuccessStatusCode();
+        string js = await response.Content.ReadAsStringAsync();
+        Assert.Contains("localStorage", js);
+        Assert.Contains("textContent", js);
+        // Saved text must never be treated as HTML: that is how stored text could run as script.
+        Assert.DoesNotContain("innerHTML", js);
+        Assert.DoesNotContain("insertAdjacentHTML", js);
+    }
     #endregion
 }
