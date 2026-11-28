@@ -1,0 +1,55 @@
+﻿@page
+@model DatesModel
+@using Prahelika.Calculators.Web.Models
+@{
+    ViewData["Title"] = "Date calculator";
+}
+
+<h1 class="h2 mb-3">Date calculator</h1>
+
+<ul class="nav nav-pills mb-4">
+    @foreach (var tool in Enum.GetValues<DateTool>())
+    {
+        <li class="nav-item">
+            <a class="nav-link @(tool == Model.Tool ? "active" : "")"
+               asp-page="/Dates" asp-route-tool="@tool">@tool.DisplayName()</a>
+        </li>
+    }
+</ul>
+
+<h2 class="h4">@Model.Tool.DisplayName()</h2>
+<p class="text-muted">@Model.Description</p>
+
+<form method="post" class="row g-3" style="max-width: 32rem">
+    <div class="col-12">
+        <label asp-for="FirstDate" class="form-label">@Model.FirstLabel</label>
+        <input asp-for="FirstDate" type="date" class="form-control" />
+    </div>
+
+    @if (Model.Tool != DateTool.Add)
+    {
+        <div class="col-12">
+            <label asp-for="SecondDate" class="form-label">@Model.SecondLabel</label>
+            <input asp-for="SecondDate" type="date" class="form-control" />
+        </div>
+    }
+    else
+    {
+        <div class="col-sm-6">
+            <label asp-for="Amount" class="form-label">How many (minus goes back)</label>
+            <input asp-for="Amount" type="number" step="1" class="form-control" />
+        </div>
+        <div class="col-sm-6">
+            <label asp-for="Unit" class="form-label">Unit</label>
+            <select asp-for="Unit" class="form-select">
+                <option value="Months">Months</option>
+                <option value="Days">Days</option>
+            </select>
+        </div>
+    }
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Calculate</button>
+    </div>
+</form>
+<partial name="_Result" model="Model" />

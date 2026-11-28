@@ -86,6 +86,30 @@ public enum LoanTool
     Borrow
 }
 
+public enum DateTool
+{
+    [Display(Name = "Age")]
+    Age,
+    [Display(Name = "Days between two dates")]
+    Between,
+    [Display(Name = "Add or subtract")]
+    Add
+}
+
+public enum DateUnit
+{
+    Months,
+    Days
+}
+
+public enum ProgrammerTool
+{
+    [Display(Name = "Number bases")]
+    Convert,
+    [Display(Name = "Bitwise operations")]
+    Bitwise
+}
+
 public static class EnumExtensions
 {
     /// <summary>The friendly name from a [Display(Name = "...")] attribute, or the enum name if there is none.</summary>
