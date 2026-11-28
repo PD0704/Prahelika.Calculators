@@ -973,4 +973,65 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
         Assert.Matches("<a [^>]*href=\"/Dates\"[^>]*>Open</a>", html);
         Assert.Matches("<a [^>]*href=\"/Programmer\"[^>]*>Open</a>", html);
     }
+
+
+    #region Dark mode
+    public static TheoryData<string> AllPages => new()
+    {
+        "/", "/Basic", "/Scientific", "/Finance", "/India", "/Loans",
+        "/Statistics", "/Units", "/Dates", "/Programmer"
+    };
+
+    [Theory]
+    [MemberData(nameof(AllPages))]
+    public async Task Every_Page_Has_The_Theme_Toggle_And_Loads_The_Theme_Script_In_The_Head(string url)
+    {
+        string html = await _client.GetStringAsync(url);
+
+        Assert.Contains("id=\"theme-toggle\"", html);
+        // In the head, so the right colours are set before the page is drawn (no white flash).
+        Assert.Matches(new Regex("<head>.*?<script src=\"[^\"]*theme[^\"]*\".*?</head>", RegexOptions.Singleline), html);
+    }
+
+    [Theory]
+    [InlineData("navbar-light")]
+    [InlineData("bg-white")]
+    [InlineData("text-dark")]
+    public async Task The_Layout_Does_Not_Force_Light_Colours(string forcedClass)
+    {
+        string html = await _client.GetStringAsync("/");
+
+        Assert.DoesNotContain(forcedClass, html);
+    }
+
+    [Fact]
+    public async Task The_Theme_Script_Is_Served_And_Handles_The_System_Setting_And_Saving()
+    {
+        var response = await _client.GetAsync("/js/theme.js");
+
+        response.EnsureSuccessStatusCode();
+        string js = await response.Content.ReadAsStringAsync();
+        Assert.Contains("data-bs-theme", js);
+        Assert.Contains("prefers-color-scheme", js);
+        Assert.Contains("localStorage", js);
+    }
+
+    [Fact]
+    public async Task The_Stylesheet_Has_No_Fixed_Light_Colours()
+    {
+        string css = await _client.GetStringAsync("/css/site.css");
+
+        Assert.DoesNotContain("#e5e5e5", css);   // the old fixed light border colour
+        Assert.DoesNotContain("#0077cc", css);   // the old fixed link colour, too dark-on-dark to read
+    }
+
+    [Fact]
+    public async Task The_Chart_Script_Follows_The_Theme()
+    {
+        string js = await _client.GetStringAsync("/js/loan-chart.js");
+
+        Assert.Contains("themechange", js);
+        Assert.Contains("--bs-body-color", js);
+    } 
+    #endregion
 }
