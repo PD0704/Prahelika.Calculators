@@ -3,7 +3,7 @@
 [![NuGet](https://img.shields.io/nuget/vpre/Prahelika.Calculators)](https://www.nuget.org/packages/Prahelika.Calculators)
 [![CI](https://github.com/PD0704/Prahelika.Calculators/actions/workflows/ci.yml/badge.svg)](https://github.com/PD0704/Prahelika.Calculators/actions/workflows/ci.yml)
 
-A small, well-tested .NET library with basic, scientific, finance and India-focused calculators (FD, RD, PPF, GST split, income tax) and loan planning tools (prepayment, loan comparison, how much can I borrow). Calculations never throw for bad user input: they return a result object that says what went wrong.
+A small, well-tested .NET library with basic, scientific, finance and India-focused calculators (FD, RD, PPF, GST split, income tax), loan planning tools, and statistics, unit conversion, date and programmer calculators. Calculations never throw for bad user input: they return a result object that says what went wrong.
 
 ## Install
 
@@ -112,6 +112,38 @@ Console.WriteLine(borrow.Value!.MaxLoanAmount);   // 2222899.08
 ```
 
 `Prepay` assumes the same EMI continues after the lump sum, so the loan ends sooner. `MaxLoanAmount` rounds down, so the EMI never goes above your monthly payment.
+
+### Statistics, units, dates and programmer tools
+
+```csharp
+using Prahelika.Calculators.Core.Dates;
+using Prahelika.Calculators.Core.Programmer;
+using Prahelika.Calculators.Core.Statistics;
+using Prahelika.Calculators.Core.Units;
+
+// Statistics: mean, median, mode and standard deviation
+var stats = new StatisticsCalculator().Summarise(new[] { 2m, 4m, 4m, 4m, 5m, 5m, 7m, 9m });
+Console.WriteLine(stats.Value!.Mean);                          // 5
+Console.WriteLine(stats.Value!.Median);                        // 4.5
+Console.WriteLine(stats.Value!.PopulationStandardDeviation);   // 2
+Console.WriteLine(stats.Value!.SampleStandardDeviation);       // 2.14
+
+// Units: length, weight, temperature, area and volume
+var converter = new UnitConverter();
+Console.WriteLine(converter.Convert(1m, MeasurementUnit.Mile, MeasurementUnit.Kilometre).Value);        // 1.609344
+Console.WriteLine(converter.Convert(100m, MeasurementUnit.Celsius, MeasurementUnit.Fahrenheit).Value);  // 212
+
+// Dates: age in years, months and days. You pass the date to measure to, so results never depend on the clock.
+var age = new DateCalculator().Age(new DateOnly(2000, 1, 15), new DateOnly(2026, 11, 27));
+Console.WriteLine($"{age.Value!.Years} years, {age.Value.Months} months, {age.Value.Days} days");   // 26 years, 10 months, 12 days
+
+// Programmer: number bases and bitwise operations on 64-bit numbers
+var programmer = new ProgrammerCalculator();
+Console.WriteLine(programmer.ConvertBase("255", NumberBase.Decimal).Value!.Hexadecimal);                  // FF
+Console.WriteLine(programmer.Bitwise(12, BitwiseOperation.And, 10).Value!.Value);                        // 8
+```
+
+Also available: `AddMonths` and `AddDays` on `DateCalculator`, and `Between` for the gap between two dates. Adding a month to 31 January gives the last day of February. In binary, octal and hexadecimal, a negative number is shown as its 64 bits (two's complement).
 
 ## Handling errors
 

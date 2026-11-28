@@ -7,6 +7,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-28
+
 ### Added
 - A **statistics calculator** in the library: mean, median, mode, and population and sample standard deviation (`IStatisticsCalculator`).
 - A **unit converter** in the library: length, weight, temperature, area and volume (`IUnitConverter`).
@@ -101,7 +103,8 @@ First stable release. It includes everything from the 0.x releases: the Basic, S
 - Branch protection on `main`: pull requests and a passing CI check are required.
 - NuGet package metadata and package README. Placeholder package `0.0.1-alpha` published to reserve the package ID.
 
-[Unreleased]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/PD0704/Prahelika.Calculators/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/PD0704/Prahelika.Calculators/compare/v0.3.1-alpha...v1.0.0
