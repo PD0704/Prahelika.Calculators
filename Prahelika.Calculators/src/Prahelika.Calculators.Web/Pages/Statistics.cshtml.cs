@@ -41,10 +41,6 @@ public class StatisticsModel(IStatisticsCalculator calculator) : CalculatorPageM
 
         void Add(string label, string value) => view.Details.Add(new(label, value));
 
-        Add("Count", summary.Count.ToString(CultureInfo.InvariantCulture));
-        Add("Sum", ResultView.Number(summary.Sum));
-        Add("Minimum", ResultView.Number(summary.Minimum));
-        Add("Maximum", ResultView.Number(summary.Maximum));
         Add("Mean", ResultView.Number(summary.Mean));
         Add("Median", ResultView.Number(summary.Median));
         Add("Mode", summary.Modes.Count == 0
@@ -54,6 +50,10 @@ public class StatisticsModel(IStatisticsCalculator calculator) : CalculatorPageM
         Add("Standard deviation (sample)", summary.SampleStandardDeviation is { } sample
             ? ResultView.Number(sample)
             : "Needs at least two numbers");
+        Add("Count", summary.Count.ToString(CultureInfo.InvariantCulture));
+        Add("Sum", ResultView.Number(summary.Sum));
+        Add("Minimum", ResultView.Number(summary.Minimum));
+        Add("Maximum", ResultView.Number(summary.Maximum));
 
         return view;
     }

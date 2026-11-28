@@ -62,6 +62,30 @@ public sealed class ResultView
     /// <summary>Formats an amount of money like the result boxes do: two decimals, with Indian digit grouping where the server supports it.</summary>
     public static string Money(decimal value) => value.ToString("N2", MoneyCulture);
 
+    /// <summary>
+    /// A short text for the history list: the single value, or the first two rows of a record,
+    /// or the size of a table.
+    /// </summary>
+    public string HistoryText
+    {
+        get
+        {
+            if (Summary is not null)
+            {
+                return Summary;
+            }
+
+            if (Details.Count > 0)
+            {
+                return string.Join("; ", Details.Take(2).Select(detail => $"{detail.Key}: {detail.Value}"));
+            }
+
+            return Rows.Count > 0
+                ? $"Table with {Rows.Count} row{(Rows.Count == 1 ? string.Empty : "s")}"
+                : string.Empty;
+        }
+    }
+
     /// <summary>Formats a plain number like the result boxes do: no trailing zeros (150.0 shows as 150).</summary>
     public static string Number(decimal value) => Format(value, money: false);
 

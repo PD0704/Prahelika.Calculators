@@ -6,7 +6,7 @@
 }
 else if (Model.Result is { } result)
 {
-    <div class="card mt-4 border-success">
+    <div id="result-card" class="card mt-4 border-success" data-history-result="@result.HistoryText">
         <div class="card-body">
             <h2 class="h6 text-success text-uppercase">Result</h2>
 

@@ -9,6 +9,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 - A **dark mode** that follows your device setting, with a **Theme** button in the menu to choose Auto, Light or Dark. The loan charts follow it too.
+- A **History** panel on the website that remembers your last 20 results in your browser, with a **Clear history** button.
 
 ## [1.3.0] - 2026-11-28
 

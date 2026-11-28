@@ -52,6 +52,10 @@
                         </li>
                     </ul>
                     <button type="button" id="theme-toggle" class="btn btn-sm btn-outline-secondary ms-sm-2 my-2 my-sm-0">Theme: Auto</button>
+                    <button type="button" id="history-toggle" class="btn btn-sm btn-outline-secondary ms-sm-2 my-2 my-sm-0"
+                            data-bs-toggle="offcanvas" data-bs-target="#history-panel" aria-controls="history-panel">
+                        History <span id="history-count" class="badge text-bg-secondary" hidden>0</span>
+                    </button>
                 </div>
             </div>
         </nav>
@@ -68,9 +72,26 @@
         </div>
     </footer>
 
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="history-panel" aria-labelledby="history-title">
+        <div class="offcanvas-header">
+            <h2 class="offcanvas-title h5" id="history-title">History</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close history"></button>
+        </div>
+        <div class="offcanvas-body">
+            <p class="small text-body-secondary">Your last 20 results. They are saved only in this browser.</p>
+            <p id="history-unavailable" class="small text-warning-emphasis" hidden>
+                This browser is blocking storage, so results cannot be saved.
+            </p>
+            <ul id="history-list" class="list-group list-group-flush mb-3"></ul>
+            <p id="history-empty" class="text-body-secondary">No results yet. Calculate something and it will appear here.</p>
+            <button type="button" id="history-clear" class="btn btn-sm btn-outline-danger" hidden>Clear history</button>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/history.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
