@@ -2,6 +2,10 @@ using System.Text.Json.Serialization;
 using Prahelika.Calculators.Api.Endpoints;
 using Prahelika.Calculators.Core.Basic;
 using Prahelika.Calculators.Core.Finance;
+using Prahelika.Calculators.Core.Dates;
+using Prahelika.Calculators.Core.Programmer;
+using Prahelika.Calculators.Core.Statistics;
+using Prahelika.Calculators.Core.Units;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +30,11 @@ builder.Services.AddSingleton<ISavingsCalculator, SavingsCalculator>();         
 builder.Services.AddSingleton<IGstSplitCalculator, GstSplitCalculator>();         // dependency injection
 builder.Services.AddSingleton<IIncomeTaxCalculator, IncomeTaxCalculator>();       // dependency injection
 builder.Services.AddSingleton<ILoanPlanner, LoanPlanner>();                       // dependency injection
+builder.Services.AddSingleton<IStatisticsCalculator, StatisticsCalculator>();     // dependency injection
+builder.Services.AddSingleton<IUnitConverter, UnitConverter>();                   // dependency injection
+builder.Services.AddSingleton<IDateCalculator, DateCalculator>();                 // dependency injection
+builder.Services.AddSingleton<IProgrammerCalculator, ProgrammerCalculator>();     // dependency injection
+builder.Services.AddSingleton(TimeProvider.System);                               // the clock: tests replace it with a fixed one
 
 var app = builder.Build();
 
@@ -44,6 +53,10 @@ app.MapBasicEndpoints();
 app.MapScientificEndpoints();
 app.MapFinanceEndpoints();
 app.MapLoanEndpoints();
+app.MapStatisticsEndpoints();
+app.MapUnitEndpoints();
+app.MapDateEndpoints();
+app.MapProgrammerEndpoints();
 
 app.Run();
 
