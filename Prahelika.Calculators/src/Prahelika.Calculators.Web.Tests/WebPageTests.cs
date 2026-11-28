@@ -44,6 +44,17 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
         return await response.Content.ReadAsStringAsync();
     }
 
+    // Finds the value shown next to a label in the result box, for example the "Median" row.
+    private static string DetailValue(string html, string label)
+    {
+        var match = Regex.Match(
+            html,
+            $"<dt class=\"col-sm-6\">{Regex.Escape(label)}</dt>\\s*<dd class=\"col-sm-6 mb-1\">(.*?)</dd>",
+            RegexOptions.Singleline);
+        Assert.True(match.Success, $"The result has no row called '{label}'.");
+        return match.Groups[1].Value.Trim();
+    }
+
     [Theory]
     [InlineData("/", "Prahelika Calculators")]
     [InlineData("/Basic", "Basic calculator")]
@@ -51,6 +62,8 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
     [InlineData("/Finance", "Finance calculators")]
     [InlineData("/India", "India finance calculators")]
     [InlineData("/Loans", "Loan tools")]
+    [InlineData("/Statistics", "Statistics calculator")]
+    [InlineData("/Units", "Unit converter")]
 
     public async Task Pages_Open_And_Show_Their_Title(string url, string expectedText)
     {
@@ -444,5 +457,208 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
             postUrl: "/Finance?calculation=Amortization&handler=Csv");
 
         Assert.Contains("Please fill in", await response.Content.ReadAsStringAsync());
+    }
+
+    // ---- Statistics ----
+
+    [Fact]
+    public async Task Statistics_Shows_Every_Measure()
+    {
+        string html = await PostFormAsync("/Statistics", new() { ["Values"] = "2, 4, 4, 4, 5, 5, 7, 9" });
+
+        Assert.DoesNotContain("alert-danger", html);
+        Assert.Equal("8", DetailValue(html, "Count"));
+        Assert.Equal("40", DetailValue(html, "Sum"));
+        Assert.Equal("2", DetailValue(html, "Minimum"));
+        Assert.Equal("9", DetailValue(html, "Maximum"));
+        Assert.Equal("5", DetailValue(html, "Mean"));
+        Assert.Equal("4.5", DetailValue(html, "Median"));
+        Assert.Equal("4", DetailValue(html, "Mode"));
+        Assert.Equal("2", DetailValue(html, "Standard deviation (population)"));
+        Assert.Equal("2.14", DetailValue(html, "Standard deviation (sample)"));
+    }
+
+    [Fact]
+    public async Task Statistics_Accepts_Spaces_And_New_Lines()
+    {
+        string html = await PostFormAsync("/Statistics", new() { ["Values"] = "2 4 4 4\r\n5 5 7 9" });
+
+        Assert.Equal("8", DetailValue(html, "Count"));
+        Assert.Equal("5", DetailValue(html, "Mean"));
+    }
+
+    [Fact]
+    public async Task Statistics_Shows_Every_Tied_Mode()
+    {
+        string html = await PostFormAsync("/Statistics", new() { ["Values"] = "1 2 2 3 3" });
+
+        Assert.Equal("2, 3", DetailValue(html, "Mode"));
+    }
+
+    [Fact]
+    public async Task Statistics_Says_When_There_Is_No_Mode()
+    {
+        string html = await PostFormAsync("/Statistics", new() { ["Values"] = "1 2 3" });
+
+        Assert.Equal("None (no value repeats)", DetailValue(html, "Mode"));
+    }
+
+    [Fact]
+    public async Task Statistics_Of_One_Number_Has_No_Sample_Standard_Deviation()
+    {
+        string html = await PostFormAsync("/Statistics", new() { ["Values"] = "5" });
+
+        Assert.Equal("0", DetailValue(html, "Standard deviation (population)"));
+        Assert.Equal("Needs at least two numbers", DetailValue(html, "Standard deviation (sample)"));
+    }
+
+    [Fact]
+    public async Task Statistics_Names_The_Entry_That_Is_Not_A_Number()
+    {
+        string html = await PostFormAsync("/Statistics", new() { ["Values"] = "1, abc" });
+
+        Assert.Contains("alert-danger", html);
+        Assert.Contains("abc", html);
+        Assert.Contains("is not a number", html);
+    }
+
+    [Fact]
+    public async Task Statistics_Empty_Box_Asks_For_Numbers()
+    {
+        string html = await PostFormAsync("/Statistics", new() { ["Values"] = "" });
+
+        Assert.Contains("Please enter at least one number", html);
+    }
+
+    [Fact]
+    public async Task Statistics_Numbers_Too_Large_To_Add_Show_An_Error()
+    {
+        string html = await PostFormAsync("/Statistics",
+            new() { ["Values"] = "79228162514264337593543950335 79228162514264337593543950335" });
+
+        Assert.Contains("alert-danger", html);
+    }
+
+    // ---- Unit converter ----
+
+    [Fact]
+    public async Task Units_Opens_On_Length_With_Length_Units()
+    {
+        string html = await _client.GetStringAsync("/Units");
+
+        Assert.Contains("Mile", html);
+        Assert.Contains("Kilometre", html);
+        Assert.DoesNotContain("Celsius", html.Substring(html.IndexOf("<form", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task Units_Temperature_Tab_Lists_Temperature_Units()
+    {
+        string html = await _client.GetStringAsync("/Units?category=Temperature");
+        string form = html.Substring(html.IndexOf("<form", StringComparison.Ordinal));
+
+        Assert.Contains("Celsius", form);
+        Assert.Contains("Fahrenheit", form);
+        Assert.Contains("Kelvin", form);
+        Assert.DoesNotContain("Mile", form);
+    }
+
+    [Fact]
+    public async Task Units_Has_A_Tab_For_Every_Category()
+    {
+        string html = await _client.GetStringAsync("/Units");
+
+        foreach (string category in new[] { "Length", "Weight", "Temperature", "Area", "Volume" })
+        {
+            Assert.Contains($"category={category}", html);
+        }
+    }
+
+    [Fact]
+    public async Task Units_Mile_To_Kilometre_Shows_The_Result_And_A_Sentence()
+    {
+        string html = await PostFormAsync("/Units?category=Length",
+            new() { ["Value"] = "1", ["From"] = "Mile", ["To"] = "Kilometre" });
+
+        Assert.DoesNotContain("alert-danger", html);
+        Assert.Contains(">1.609344</p>", html);
+        Assert.Contains("1 Mile = 1.609344 Kilometre", html);
+    }
+
+    [Fact]
+    public async Task Units_Whole_Results_Have_No_Trailing_Zeros()
+    {
+        string html = await PostFormAsync("/Units?category=Length",
+            new() { ["Value"] = "1", ["From"] = "Metre", ["To"] = "Millimetre" });
+
+        Assert.Contains(">1000</p>", html);
+    }
+
+    [Fact]
+    public async Task Units_Celsius_To_Fahrenheit_Works()
+    {
+        string html = await PostFormAsync("/Units?category=Temperature",
+            new() { ["Value"] = "100", ["From"] = "Celsius", ["To"] = "Fahrenheit" });
+
+        Assert.Contains(">212</p>", html);
+    }
+
+    [Fact]
+    public async Task Units_Below_Absolute_Zero_Shows_An_Error()
+    {
+        string html = await PostFormAsync("/Units?category=Temperature",
+            new() { ["Value"] = "-300", ["From"] = "Celsius", ["To"] = "Fahrenheit" });
+
+        Assert.Contains("alert-danger", html);
+        Assert.Contains("absolute zero", html);
+    }
+
+    [Fact]
+    public async Task Units_From_Different_Categories_Show_An_Error()
+    {
+        string html = await PostFormAsync("/Units?category=Length",
+            new() { ["Value"] = "1", ["From"] = "Metre", ["To"] = "Kilogram" });
+
+        Assert.Contains("alert-danger", html);
+        Assert.Contains("Cannot convert", html);
+    }
+
+    [Fact]
+    public async Task Units_Empty_Value_Asks_For_It()
+    {
+        string html = await PostFormAsync("/Units?category=Length",
+            new() { ["Value"] = "", ["From"] = "Metre", ["To"] = "Foot" });
+
+        Assert.Contains("Please enter the value", html);
+    }
+
+    [Fact]
+    public async Task Units_Unknown_Category_Still_Opens_The_Page()
+    {
+        var response = await _client.GetAsync("/Units?category=Nope");
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    // ---- Navigation ----
+
+    [Fact]
+    public async Task The_Menu_Links_To_Statistics_And_Units()
+    {
+        string html = await _client.GetStringAsync("/");
+
+        Assert.Contains("href=\"/Statistics\"", html);
+        Assert.Contains("href=\"/Units\"", html);
+    }
+
+    [Fact]
+    public async Task Home_Page_Has_Cards_For_Statistics_And_Units()
+    {
+        string html = await _client.GetStringAsync("/");
+
+        Assert.Matches("card-title\">Statistics</h2>", html);
+        Assert.Matches("card-title\">Unit converter</h2>", html);
+        Assert.Matches("<a [^>]*href=\"/Statistics\"[^>]*>Open</a>", html);
+        Assert.Matches("<a [^>]*href=\"/Units\"[^>]*>Open</a>", html);
     }
 }

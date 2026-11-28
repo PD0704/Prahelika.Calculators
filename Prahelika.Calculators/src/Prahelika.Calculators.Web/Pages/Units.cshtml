@@ -1,0 +1,53 @@
+﻿@page
+@model UnitsModel
+@using Prahelika.Calculators.Core.Units
+@using Prahelika.Calculators.Web.Models
+@{
+    ViewData["Title"] = "Unit converter";
+}
+
+<h1 class="h2 mb-3">Unit converter</h1>
+
+<ul class="nav nav-pills mb-4">
+    @foreach (var category in Enum.GetValues<UnitCategory>())
+    {
+        <li class="nav-item">
+            <a class="nav-link @(category == Model.Category ? "active" : "")"
+               asp-page="/Units" asp-route-category="@category">@category</a>
+        </li>
+    }
+</ul>
+
+<p class="text-muted">@Model.Description</p>
+
+<form method="post" class="row g-3" style="max-width: 32rem">
+    <div class="col-12">
+        <label asp-for="Value" class="form-label">Value</label>
+        <input asp-for="Value" type="number" step="any" class="form-control" />
+    </div>
+
+    <div class="col-sm-6">
+        <label asp-for="From" class="form-label">From</label>
+        <select asp-for="From" class="form-select">
+            @foreach (var unit in Model.UnitsInCategory)
+            {
+                <option value="@unit">@UnitNames.For(unit)</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-sm-6">
+        <label asp-for="To" class="form-label">To</label>
+        <select asp-for="To" class="form-select">
+            @foreach (var unit in Model.UnitsInCategory)
+            {
+                <option value="@unit">@UnitNames.For(unit)</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Convert</button>
+    </div>
+</form>
+<partial name="_Result" model="Model" />

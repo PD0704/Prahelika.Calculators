@@ -2,6 +2,8 @@ using System.Globalization;
 using Prahelika.Calculators.Core.Basic;
 using Prahelika.Calculators.Core.Finance;
 using Prahelika.Calculators.Core.Scientific;
+using Prahelika.Calculators.Core.Statistics;
+using Prahelika.Calculators.Core.Units;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,8 @@ builder.Services.AddSingleton<ISavingsCalculator, SavingsCalculator>();
 builder.Services.AddSingleton<IGstSplitCalculator, GstSplitCalculator>();
 builder.Services.AddSingleton<IIncomeTaxCalculator, IncomeTaxCalculator>();
 builder.Services.AddSingleton<ILoanPlanner, LoanPlanner>();
+builder.Services.AddSingleton<IStatisticsCalculator, StatisticsCalculator>();
+builder.Services.AddSingleton<IUnitConverter, UnitConverter>();
 
 var app = builder.Build();
 
