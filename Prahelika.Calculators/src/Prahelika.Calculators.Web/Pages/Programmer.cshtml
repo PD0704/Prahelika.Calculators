@@ -1,0 +1,67 @@
+﻿@page
+@model ProgrammerModel
+@using Prahelika.Calculators.Core.Programmer
+@using Prahelika.Calculators.Web.Models
+@{
+    ViewData["Title"] = "Programmer calculator";
+}
+
+<h1 class="h2 mb-3">Programmer calculator</h1>
+
+<ul class="nav nav-pills mb-4">
+    @foreach (var tool in Enum.GetValues<ProgrammerTool>())
+    {
+        <li class="nav-item">
+            <a class="nav-link @(tool == Model.Tool ? "active" : "")"
+               asp-page="/Programmer" asp-route-tool="@tool">@tool.DisplayName()</a>
+        </li>
+    }
+</ul>
+
+<h2 class="h4">@Model.Tool.DisplayName()</h2>
+<p class="text-muted">@Model.Description</p>
+
+<form method="post" class="row g-3" style="max-width: 32rem">
+    <div class="col-12">
+        <label asp-for="InputBase" class="form-label">The numbers are written in</label>
+        <select asp-for="InputBase" class="form-select">
+            @foreach (var numberBase in Enum.GetValues<NumberBase>())
+            {
+                <option value="@numberBase">@numberBase</option>
+            }
+        </select>
+    </div>
+
+    @if (Model.Tool == ProgrammerTool.Convert)
+    {
+        <div class="col-12">
+            <label asp-for="Number" class="form-label">Number</label>
+            <input asp-for="Number" class="form-control font-monospace" autocomplete="off" />
+        </div>
+    }
+    else
+    {
+        <div class="col-12">
+            <label asp-for="Left" class="form-label">First number</label>
+            <input asp-for="Left" class="form-control font-monospace" autocomplete="off" />
+        </div>
+        <div class="col-12">
+            <label asp-for="Operation" class="form-label">Operation</label>
+            <select asp-for="Operation" class="form-select">
+                @foreach (var operation in Enum.GetValues<BitwiseOperation>())
+                {
+                    <option value="@operation">@ProgrammerModel.OperationName(operation)</option>
+                }
+            </select>
+        </div>
+        <div class="col-12">
+            <label asp-for="Right" class="form-label">Second number (or shift amount, 0 to 63)</label>
+            <input asp-for="Right" class="form-control font-monospace" autocomplete="off" />
+        </div>
+    }
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Calculate</button>
+    </div>
+</form>
+<partial name="_Result" model="Model" />

@@ -13,6 +13,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - A **date calculator** in the library: age in years, months and days, the gap between two dates, and adding months or days to a date (`IDateCalculator`).
 - A **programmer calculator** in the library: convert between binary, octal, decimal and hexadecimal, and AND, OR, XOR, NOT and bit shifts on 64-bit numbers (`IProgrammerCalculator`).
 - API endpoints for the new calculators: **statistics** (`/api/statistics`), **units** (`/api/units`), **dates** (`/api/dates`) and **programmer** (`/api/programmer`), all documented in Swagger.
+- Website pages for the **date calculator** (age, days between dates, add or subtract months or days) and the **programmer calculator** (number bases and bitwise operations).
 
 ## [1.2.0] - 2026-11-27
 

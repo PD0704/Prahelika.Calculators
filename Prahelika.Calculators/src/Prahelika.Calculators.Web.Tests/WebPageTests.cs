@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestPlatform.TestHost;
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace Prahelika.Calculators.Web.Tests;
@@ -22,9 +22,11 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
     // and send it back with the form, like a browser does. The form can be sent to a
     // different address than the one the token was read from (for example, a named handler).
     private async Task<HttpResponseMessage> PostFormResponseAsync(
-        string url, Dictionary<string, string> fields, string? postUrl = null)
+        string url, Dictionary<string, string> fields, string? postUrl = null, HttpClient? client = null)
     {
-        var pageResponse = await _client.GetAsync(url);
+        client ??= _client;
+
+        var pageResponse = await client.GetAsync(url);
         Assert.True(pageResponse.IsSuccessStatusCode,
             $"GET {url} returned {(int)pageResponse.StatusCode}, redirect to: {pageResponse.Headers.Location}");
         string page = await pageResponse.Content.ReadAsStringAsync();
@@ -32,17 +34,27 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
         Assert.True(match.Success, "The page has no anti-forgery token.");
 
         fields["__RequestVerificationToken"] = match.Groups[1].Value;
-        var response = await _client.PostAsync(postUrl ?? url, new FormUrlEncodedContent(fields));
+        var response = await client.PostAsync(postUrl ?? url, new FormUrlEncodedContent(fields));
         Assert.True(response.IsSuccessStatusCode,
             $"POST to {postUrl ?? url} returned {(int)response.StatusCode}, redirect to: {response.Headers.Location}");
         return response;
     }
 
-    private async Task<string> PostFormAsync(string url, Dictionary<string, string> fields)
+    private async Task<string> PostFormAsync(string url, Dictionary<string, string> fields, HttpClient? client = null)
     {
-        var response = await PostFormResponseAsync(url, fields);
+        var response = await PostFormResponseAsync(url, fields, client: client);
         return await response.Content.ReadAsStringAsync();
     }
+
+    // A client for a copy of the website whose clock always says the given time.
+    private HttpClient ClientWithClock(DateTimeOffset now) =>
+        factory.WithWebHostBuilder(builder =>
+                builder.ConfigureServices(services => services.AddSingleton<TimeProvider>(new FixedTimeProvider(now))))
+            .CreateClient(new WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("https://localhost")
+            });
 
     // Finds the value shown next to a label in the result box, for example the "Median" row.
     private static string DetailValue(string html, string label)
@@ -64,6 +76,8 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
     [InlineData("/Loans", "Loan tools")]
     [InlineData("/Statistics", "Statistics calculator")]
     [InlineData("/Units", "Unit converter")]
+    [InlineData("/Dates", "Date calculator")]
+    [InlineData("/Programmer", "Programmer calculator")]
 
     public async Task Pages_Open_And_Show_Their_Title(string url, string expectedText)
     {
@@ -73,6 +87,7 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
         Assert.Contains(expectedText, await response.Content.ReadAsStringAsync());
     }
 
+    #region Basic
     [Fact]
     public async Task Basic_Divide_Shows_The_Result()
     {
@@ -100,7 +115,7 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
 
         Assert.Contains("Please enter both numbers.", html);
     }
-    
+
     [Fact]
     public async Task Basic_Percentage_Is_B_Percent_Of_A()
     {
@@ -109,7 +124,9 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
 
         Assert.Contains(">30</p>", html);
     }
+    #endregion
 
+    #region Scientific
     [Fact]
     public async Task Scientific_Sin_In_Degrees_Reports_The_Unit()
     {
@@ -137,7 +154,9 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
 
         Assert.Contains("must be a whole number", html);
     }
+    #endregion
 
+    #region Finance
     [Fact]
     public async Task Finance_Emi_Shows_The_Monthly_Payment()
     {
@@ -152,187 +171,6 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
     {
         string html = await PostFormAsync("/Finance?calculation=Emi",
             new() { ["Calculation"] = "Emi", ["Amount"] = "100000" });
-
-        Assert.Contains("Please fill in", html);
-    }
-
-    [Fact]
-    public async Task India_Fixed_Deposit_Shows_The_Maturity_Amount()
-    {
-        string html = await PostFormAsync("/India?calculation=FixedDeposit",
-            new()
-            {
-                ["Calculation"] = "FixedDeposit",
-                ["Amount"] = "100000",
-                ["Rate"] = "7",
-                ["Months"] = "12",
-                ["Frequency"] = "Quarterly"
-            });
-
-        Assert.Contains("185.90", html);          // 1,07,185.90 (the digit grouping depends on the server)
-        Assert.DoesNotContain("alert-danger", html);
-    }
-
-    [Fact]
-    public async Task India_Ppf_Rejects_A_Term_That_Is_Not_Allowed()
-    {
-        string html = await PostFormAsync("/India?calculation=Ppf",
-            new() { ["Calculation"] = "Ppf", ["Amount"] = "50000", ["Rate"] = "7.1", ["Years"] = "16" });
-
-        Assert.Contains("alert-danger", html);
-    }
-
-    [Fact]
-    public async Task India_Gst_Split_Shows_Cgst_And_Sgst()
-    {
-        string html = await PostFormAsync("/India?calculation=GstSplit",
-            new() { ["Calculation"] = "GstSplit", ["Amount"] = "1000", ["Rate"] = "18", ["Mode"] = "Exclusive" });
-
-        Assert.Contains("CGST", html);
-        Assert.Contains("SGST", html);
-        Assert.Contains("90.00", html);
-    }
-
-    [Fact]
-    public async Task India_Income_Tax_Shows_The_Total_And_The_Slab_Breakdown()
-    {
-        string html = await PostFormAsync("/India?calculation=IncomeTax",
-            new() { ["Calculation"] = "IncomeTax", ["Amount"] = "1500000", ["Salaried"] = "true" });
-
-        Assert.Contains("97,500.00", html);        // total tax
-        Assert.Contains("Income In Slab", html);   // the breakdown table
-        Assert.Contains("33,750.00", html);        // tax in the 15% slab
-        Assert.DoesNotContain("alert-danger", html);
-    }
-
-    [Fact]
-    public async Task India_Income_Tax_Without_The_Salaried_Box_Has_No_Standard_Deduction()
-    {
-        string html = await PostFormAsync("/India?calculation=IncomeTax",
-            new() { ["Calculation"] = "IncomeTax", ["Amount"] = "1300000", ["Salaried"] = "false" });
-
-        Assert.Contains("78,000.00", html);
-    }
-
-    [Fact]
-    public async Task India_Missing_Fields_Are_Listed()
-    {
-        string html = await PostFormAsync("/India?calculation=Ppf",
-            new() { ["Calculation"] = "Ppf", ["Amount"] = "50000" });
-
-        Assert.Contains("Please fill in", html);
-    }
-
-    [Fact]
-    public async Task Loans_Prepayment_Shows_The_Interest_Saved()
-    {
-        string html = await PostFormAsync("/Loans?tool=Prepayment",
-            new()
-            {
-                ["Tool"] = "Prepayment",
-                ["Amount"] = "100000",
-                ["Rate"] = "12",
-                ["Months"] = "12",
-                ["PrepaymentMonth"] = "6",
-                ["PrepaymentAmount"] = "20000"
-            });
-
-        Assert.Contains("1,075.12", html);
-        Assert.DoesNotContain("alert-danger", html);
-    }
-
-    [Fact]
-    public async Task Loans_Prepayment_At_The_Last_Month_Is_An_Error()
-    {
-        string html = await PostFormAsync("/Loans?tool=Prepayment",
-            new()
-            {
-                ["Tool"] = "Prepayment",
-                ["Amount"] = "100000",
-                ["Rate"] = "12",
-                ["Months"] = "12",
-                ["PrepaymentMonth"] = "12",
-                ["PrepaymentAmount"] = "20000"
-            });
-
-        Assert.Contains("alert-danger", html);
-    }
-
-    [Fact]
-    public async Task Loans_Compare_Shows_The_Cheaper_Loan_In_A_Table()
-    {
-        string html = await PostFormAsync("/Loans?tool=Compare",
-            new()
-            {
-                ["Tool"] = "Compare",
-                ["Amount"] = "500000",
-                ["Rate"] = "10",
-                ["Months"] = "60",
-                ["Fee"] = "5000",
-                ["SecondAmount"] = "500000",
-                ["SecondRate"] = "10.5",
-                ["SecondMonths"] = "60",
-                ["SecondFee"] = ""
-            });
-
-        Assert.Contains("Cheaper loan", html);
-        Assert.Contains("2,405.80", html);              // the difference in total cost
-        Assert.Contains("Total cost", html);            // a row of the side-by-side table
-        Assert.DoesNotContain("alert-danger", html);
-    }
-
-    [Fact]
-    public async Task Loans_Compare_Identical_Loans_Cost_The_Same()
-    {
-        string html = await PostFormAsync("/Loans?tool=Compare",
-            new()
-            {
-                ["Tool"] = "Compare",
-                ["Amount"] = "1000000",
-                ["Rate"] = "8.5",
-                ["Months"] = "240",
-                ["SecondAmount"] = "1000000",
-                ["SecondRate"] = "8.5",
-                ["SecondMonths"] = "240"
-            });
-
-        Assert.Contains("Both cost the same", html);
-    }
-
-    [Fact]
-    public async Task Loans_Compare_Says_Which_Loan_Is_Invalid()
-    {
-        string html = await PostFormAsync("/Loans?tool=Compare",
-            new()
-            {
-                ["Tool"] = "Compare",
-                ["Amount"] = "500000",
-                ["Rate"] = "10",
-                ["Months"] = "60",
-                ["SecondAmount"] = "500000",
-                ["SecondRate"] = "10",
-                ["SecondMonths"] = "0"
-            });
-
-        Assert.Contains("alert-danger", html);
-        Assert.Contains("Second loan", html);
-    }
-
-    [Fact]
-    public async Task Loans_Borrow_Shows_The_Largest_Loan()
-    {
-        string html = await PostFormAsync("/Loans?tool=Borrow",
-            new() { ["Tool"] = "Borrow", ["MonthlyPayment"] = "20000", ["Rate"] = "9", ["Months"] = "240" });
-
-        Assert.Contains("899.08", html);                // 2,222,899.08 (the digit grouping depends on the server)
-        Assert.DoesNotContain("alert-danger", html);
-    }
-
-    [Fact]
-    public async Task Loans_Missing_Fields_Are_Listed()
-    {
-        string html = await PostFormAsync("/Loans?tool=Borrow",
-            new() { ["Tool"] = "Borrow", ["MonthlyPayment"] = "20000", ["Rate"] = "9" });
 
         Assert.Contains("Please fill in", html);
     }
@@ -458,9 +296,194 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
 
         Assert.Contains("Please fill in", await response.Content.ReadAsStringAsync());
     }
+    #endregion
 
-    // ---- Statistics ----
+    #region India
+    [Fact]
+    public async Task India_Fixed_Deposit_Shows_The_Maturity_Amount()
+    {
+        string html = await PostFormAsync("/India?calculation=FixedDeposit",
+            new()
+            {
+                ["Calculation"] = "FixedDeposit",
+                ["Amount"] = "100000",
+                ["Rate"] = "7",
+                ["Months"] = "12",
+                ["Frequency"] = "Quarterly"
+            });
 
+        Assert.Contains("185.90", html);          // 1,07,185.90 (the digit grouping depends on the server)
+        Assert.DoesNotContain("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task India_Ppf_Rejects_A_Term_That_Is_Not_Allowed()
+    {
+        string html = await PostFormAsync("/India?calculation=Ppf",
+            new() { ["Calculation"] = "Ppf", ["Amount"] = "50000", ["Rate"] = "7.1", ["Years"] = "16" });
+
+        Assert.Contains("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task India_Gst_Split_Shows_Cgst_And_Sgst()
+    {
+        string html = await PostFormAsync("/India?calculation=GstSplit",
+            new() { ["Calculation"] = "GstSplit", ["Amount"] = "1000", ["Rate"] = "18", ["Mode"] = "Exclusive" });
+
+        Assert.Contains("CGST", html);
+        Assert.Contains("SGST", html);
+        Assert.Contains("90.00", html);
+    }
+
+    [Fact]
+    public async Task India_Income_Tax_Shows_The_Total_And_The_Slab_Breakdown()
+    {
+        string html = await PostFormAsync("/India?calculation=IncomeTax",
+            new() { ["Calculation"] = "IncomeTax", ["Amount"] = "1500000", ["Salaried"] = "true" });
+
+        Assert.Contains("97,500.00", html);        // total tax
+        Assert.Contains("Income In Slab", html);   // the breakdown table
+        Assert.Contains("33,750.00", html);        // tax in the 15% slab
+        Assert.DoesNotContain("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task India_Income_Tax_Without_The_Salaried_Box_Has_No_Standard_Deduction()
+    {
+        string html = await PostFormAsync("/India?calculation=IncomeTax",
+            new() { ["Calculation"] = "IncomeTax", ["Amount"] = "1300000", ["Salaried"] = "false" });
+
+        Assert.Contains("78,000.00", html);
+    }
+
+    [Fact]
+    public async Task India_Missing_Fields_Are_Listed()
+    {
+        string html = await PostFormAsync("/India?calculation=Ppf",
+            new() { ["Calculation"] = "Ppf", ["Amount"] = "50000" });
+
+        Assert.Contains("Please fill in", html);
+    }
+    #endregion
+
+    #region Loans
+    [Fact]
+    public async Task Loans_Prepayment_Shows_The_Interest_Saved()
+    {
+        string html = await PostFormAsync("/Loans?tool=Prepayment",
+            new()
+            {
+                ["Tool"] = "Prepayment",
+                ["Amount"] = "100000",
+                ["Rate"] = "12",
+                ["Months"] = "12",
+                ["PrepaymentMonth"] = "6",
+                ["PrepaymentAmount"] = "20000"
+            });
+
+        Assert.Contains("1,075.12", html);
+        Assert.DoesNotContain("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task Loans_Prepayment_At_The_Last_Month_Is_An_Error()
+    {
+        string html = await PostFormAsync("/Loans?tool=Prepayment",
+            new()
+            {
+                ["Tool"] = "Prepayment",
+                ["Amount"] = "100000",
+                ["Rate"] = "12",
+                ["Months"] = "12",
+                ["PrepaymentMonth"] = "12",
+                ["PrepaymentAmount"] = "20000"
+            });
+
+        Assert.Contains("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task Loans_Compare_Shows_The_Cheaper_Loan_In_A_Table()
+    {
+        string html = await PostFormAsync("/Loans?tool=Compare",
+            new()
+            {
+                ["Tool"] = "Compare",
+                ["Amount"] = "500000",
+                ["Rate"] = "10",
+                ["Months"] = "60",
+                ["Fee"] = "5000",
+                ["SecondAmount"] = "500000",
+                ["SecondRate"] = "10.5",
+                ["SecondMonths"] = "60",
+                ["SecondFee"] = ""
+            });
+
+        Assert.Contains("Cheaper loan", html);
+        Assert.Contains("2,405.80", html);              // the difference in total cost
+        Assert.Contains("Total cost", html);            // a row of the side-by-side table
+        Assert.DoesNotContain("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task Loans_Compare_Identical_Loans_Cost_The_Same()
+    {
+        string html = await PostFormAsync("/Loans?tool=Compare",
+            new()
+            {
+                ["Tool"] = "Compare",
+                ["Amount"] = "1000000",
+                ["Rate"] = "8.5",
+                ["Months"] = "240",
+                ["SecondAmount"] = "1000000",
+                ["SecondRate"] = "8.5",
+                ["SecondMonths"] = "240"
+            });
+
+        Assert.Contains("Both cost the same", html);
+    }
+
+    [Fact]
+    public async Task Loans_Compare_Says_Which_Loan_Is_Invalid()
+    {
+        string html = await PostFormAsync("/Loans?tool=Compare",
+            new()
+            {
+                ["Tool"] = "Compare",
+                ["Amount"] = "500000",
+                ["Rate"] = "10",
+                ["Months"] = "60",
+                ["SecondAmount"] = "500000",
+                ["SecondRate"] = "10",
+                ["SecondMonths"] = "0"
+            });
+
+        Assert.Contains("alert-danger", html);
+        Assert.Contains("Second loan", html);
+    }
+
+    [Fact]
+    public async Task Loans_Borrow_Shows_The_Largest_Loan()
+    {
+        string html = await PostFormAsync("/Loans?tool=Borrow",
+            new() { ["Tool"] = "Borrow", ["MonthlyPayment"] = "20000", ["Rate"] = "9", ["Months"] = "240" });
+
+        Assert.Contains("899.08", html);                // 2,222,899.08 (the digit grouping depends on the server)
+        Assert.DoesNotContain("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task Loans_Missing_Fields_Are_Listed()
+    {
+        string html = await PostFormAsync("/Loans?tool=Borrow",
+            new() { ["Tool"] = "Borrow", ["MonthlyPayment"] = "20000", ["Rate"] = "9" });
+
+        Assert.Contains("Please fill in", html);
+    }
+    #endregion
+
+    #region Statistics
     [Fact]
     public async Task Statistics_Shows_Every_Measure()
     {
@@ -538,9 +561,9 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
 
         Assert.Contains("alert-danger", html);
     }
+    #endregion
 
-    // ---- Unit converter ----
-
+    #region Unit converter
     [Fact]
     public async Task Units_Opens_On_Length_With_Length_Units()
     {
@@ -639,9 +662,9 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
 
         response.EnsureSuccessStatusCode();
     }
+    #endregion
 
-    // ---- Navigation ----
-
+    #region Navigation
     [Fact]
     public async Task The_Menu_Links_To_Statistics_And_Units()
     {
@@ -660,5 +683,294 @@ public class WebPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
         Assert.Matches("card-title\">Unit converter</h2>", html);
         Assert.Matches("<a [^>]*href=\"/Statistics\"[^>]*>Open</a>", html);
         Assert.Matches("<a [^>]*href=\"/Units\"[^>]*>Open</a>", html);
+    }
+    #endregion
+
+    #region Date calculator
+    [Fact]
+    public async Task Dates_Has_A_Tab_For_Every_Tool_And_Real_Date_Pickers()
+    {
+        string html = await _client.GetStringAsync("/Dates");
+
+        Assert.Contains("tool=Age", html);
+        Assert.Contains("tool=Between", html);
+        Assert.Contains("tool=Add", html);
+        Assert.Contains("type=\"date\"", html);
+    }
+
+    [Fact]
+    public async Task Dates_Age_Shows_Years_Months_Days_And_Total_Days()
+    {
+        string html = await PostFormAsync("/Dates?tool=Age",
+            new() { ["FirstDate"] = "2000-01-15", ["SecondDate"] = "2026-11-27" });
+
+        Assert.DoesNotContain("alert-danger", html);
+        Assert.Contains(">26 years, 10 months, 12 days</p>", html);
+        Assert.Equal("9813", DetailValue(html, "Total days"));
+        Assert.Contains("Age on Friday, 27 November 2026.", html);
+    }
+
+    [Fact]
+    public async Task Dates_The_Form_Keeps_The_Dates_That_Were_Entered()
+    {
+        string html = await PostFormAsync("/Dates?tool=Age",
+            new() { ["FirstDate"] = "2000-01-15", ["SecondDate"] = "2026-11-27" });
+
+        Assert.Contains("value=\"2000-01-15\"", html);
+        Assert.Contains("value=\"2026-11-27\"", html);
+    }
+
+    [Fact]
+    public async Task Dates_Age_Uses_Singular_Words_For_One()
+    {
+        string html = await PostFormAsync("/Dates?tool=Age",
+            new() { ["FirstDate"] = "2000-02-29", ["SecondDate"] = "2001-02-28" });
+
+        Assert.Contains(">1 year, 0 months, 0 days</p>", html);
+    }
+
+    [Fact]
+    public async Task Dates_Age_Without_An_End_Date_Uses_Todays_Date_In_India()
+    {
+        // 26 November 20:00 UTC is already 27 November, 01:30, in India.
+        var client = ClientWithClock(new DateTimeOffset(2026, 11, 26, 20, 0, 0, TimeSpan.Zero));
+
+        string html = await PostFormAsync("/Dates?tool=Age",
+            new() { ["FirstDate"] = "2000-01-15", ["SecondDate"] = "" }, client);
+
+        Assert.Contains(">26 years, 10 months, 12 days</p>", html);
+        Assert.Contains("Age on Friday, 27 November 2026.", html);
+    }
+
+    [Fact]
+    public async Task Dates_Age_Before_The_Birth_Date_Shows_An_Error()
+    {
+        string html = await PostFormAsync("/Dates?tool=Age",
+            new() { ["FirstDate"] = "2026-11-28", ["SecondDate"] = "2026-11-27" });
+
+        Assert.Contains("alert-danger", html);
+        Assert.Contains("cannot be after", html);
+    }
+
+    [Fact]
+    public async Task Dates_Age_Without_A_Birth_Date_Asks_For_It()
+    {
+        string html = await PostFormAsync("/Dates?tool=Age",
+            new() { ["FirstDate"] = "", ["SecondDate"] = "2026-11-27" });
+
+        Assert.Contains("Please enter the date of birth", html);
+    }
+
+    [Fact]
+    public async Task Dates_Between_Shows_The_Gap_In_Either_Order()
+    {
+        string forwards = await PostFormAsync("/Dates?tool=Between",
+            new() { ["FirstDate"] = "2024-01-01", ["SecondDate"] = "2025-01-01" });
+        string backwards = await PostFormAsync("/Dates?tool=Between",
+            new() { ["FirstDate"] = "2025-01-01", ["SecondDate"] = "2024-01-01" });
+
+        Assert.Contains(">1 year, 0 months, 0 days</p>", forwards);
+        Assert.Equal("366", DetailValue(forwards, "Total days"));
+        Assert.Contains(">1 year, 0 months, 0 days</p>", backwards);
+        Assert.Equal("366", DetailValue(backwards, "Total days"));
+    }
+
+    [Fact]
+    public async Task Dates_Between_Needs_Both_Dates()
+    {
+        string html = await PostFormAsync("/Dates?tool=Between",
+            new() { ["FirstDate"] = "2024-01-01", ["SecondDate"] = "" });
+
+        Assert.Contains("Please enter both dates", html);
+    }
+
+    [Theory]
+    [InlineData("2024-01-31", "1", "Months", "Thursday, 29 February 2024")]    // the month is shorter, so the last day
+    [InlineData("2024-03-31", "-1", "Months", "Thursday, 29 February 2024")]   // a minus sign goes back
+    [InlineData("2024-02-28", "2", "Days", "Friday, 1 March 2024")]
+    [InlineData("2024-03-01", "-1", "Days", "Thursday, 29 February 2024")]
+    public async Task Dates_Add_Shows_The_New_Date_With_Its_Weekday(string date, string amount, string unit, string expected)
+    {
+        string html = await PostFormAsync("/Dates?tool=Add",
+            new() { ["FirstDate"] = date, ["Amount"] = amount, ["Unit"] = unit });
+
+        Assert.DoesNotContain("alert-danger", html);
+        Assert.Contains($">{expected}</p>", html);
+    }
+
+    [Fact]
+    public async Task Dates_Add_Past_The_Last_Supported_Year_Shows_An_Error()
+    {
+        string html = await PostFormAsync("/Dates?tool=Add",
+            new() { ["FirstDate"] = "9999-12-31", ["Amount"] = "1", ["Unit"] = "Days" });
+
+        Assert.Contains("alert-danger", html);
+    }
+
+    [Fact]
+    public async Task Dates_Add_Without_An_Amount_Asks_For_It()
+    {
+        string html = await PostFormAsync("/Dates?tool=Add",
+            new() { ["FirstDate"] = "2024-01-31", ["Amount"] = "", ["Unit"] = "Months" });
+
+        Assert.Contains("Please enter how many", html);
+    }
+
+    [Fact]
+    public async Task Dates_A_Date_That_Is_Not_A_Date_Shows_An_Error()
+    {
+        string html = await PostFormAsync("/Dates?tool=Age",
+            new() { ["FirstDate"] = "notadate", ["SecondDate"] = "2026-11-27" });
+
+        Assert.Contains("alert-danger", html);
+        Assert.Contains("valid dates", html);
+    }
+    #endregion
+
+    #region Programmer calculator
+    [Fact]
+    public async Task Programmer_Has_A_Tab_For_Each_Tool()
+    {
+        string html = await _client.GetStringAsync("/Programmer");
+
+        Assert.Contains("tool=Convert", html);
+        Assert.Contains("tool=Bitwise", html);
+    }
+
+    [Theory]
+    [InlineData("255", "Decimal")]
+    [InlineData("FF", "Hexadecimal")]
+    [InlineData("0xff", "Hexadecimal")]
+    [InlineData("377", "Octal")]
+    [InlineData("1111 1111", "Binary")]          // spaces from a pasted, grouped number are ignored
+    [InlineData("1111_1111", "Binary")]          // and so are underscores
+    public async Task Programmer_Convert_Shows_The_Number_In_Every_Base(string number, string inputBase)
+    {
+        string html = await PostFormAsync("/Programmer?tool=Convert",
+            new() { ["Number"] = number, ["InputBase"] = inputBase });
+
+        Assert.DoesNotContain("alert-danger", html);
+        Assert.Equal("255", DetailValue(html, "Decimal"));
+        Assert.Equal("1111 1111", DetailValue(html, "Binary"));
+        Assert.Equal("377", DetailValue(html, "Octal"));
+        Assert.Equal("FF", DetailValue(html, "Hexadecimal"));
+    }
+
+    [Fact]
+    public async Task Programmer_Convert_Shows_Negative_Numbers_As_64_Bits()
+    {
+        string html = await PostFormAsync("/Programmer?tool=Convert",
+            new() { ["Number"] = "-1", ["InputBase"] = "Decimal" });
+
+        Assert.Equal("-1", DetailValue(html, "Decimal"));
+        Assert.Equal(string.Join(" ", Enumerable.Repeat("1111", 16)), DetailValue(html, "Binary"));
+        Assert.Equal("FFFFFFFFFFFFFFFF", DetailValue(html, "Hexadecimal"));
+        Assert.Contains("64 bits", html);
+    }
+
+    [Fact]
+    public async Task Programmer_Convert_Names_The_Wrong_Digit()
+    {
+        string html = await PostFormAsync("/Programmer?tool=Convert",
+            new() { ["Number"] = "102", ["InputBase"] = "Binary" });
+
+        Assert.Contains("alert-danger", html);
+        Assert.Contains("not a valid binary digit", html);
+    }
+
+    [Fact]
+    public async Task Programmer_Convert_Reports_A_Number_That_Is_Too_Big()
+    {
+        string html = await PostFormAsync("/Programmer?tool=Convert",
+            new() { ["Number"] = "9223372036854775808", ["InputBase"] = "Decimal" });
+
+        Assert.Contains("alert-danger", html);
+        Assert.Contains("does not fit", html);
+    }
+
+    [Fact]
+    public async Task Programmer_Convert_Empty_Box_Asks_For_A_Number()
+    {
+        string html = await PostFormAsync("/Programmer?tool=Convert",
+            new() { ["Number"] = "  ", ["InputBase"] = "Decimal" });
+
+        Assert.Contains("Please enter a number", html);
+    }
+
+    [Fact]
+    public async Task Programmer_Bitwise_And_Shows_The_Result_In_Every_Base()
+    {
+        string html = await PostFormAsync("/Programmer?tool=Bitwise",
+            new() { ["Left"] = "12", ["Operation"] = "And", ["Right"] = "10", ["InputBase"] = "Decimal" });
+
+        Assert.Equal("8", DetailValue(html, "Decimal"));
+        Assert.Equal("1000", DetailValue(html, "Binary"));
+    }
+
+    [Fact]
+    public async Task Programmer_Bitwise_Reads_The_Numbers_In_The_Chosen_Base()
+    {
+        string html = await PostFormAsync("/Programmer?tool=Bitwise",
+            new() { ["Left"] = "F0F0", ["Operation"] = "And", ["Right"] = "FF00", ["InputBase"] = "Hexadecimal" });
+
+        Assert.Equal("F000", DetailValue(html, "Hexadecimal"));
+        Assert.Equal("61440", DetailValue(html, "Decimal"));
+    }
+
+    [Fact]
+    public async Task Programmer_Not_Needs_Only_The_First_Number()
+    {
+        string html = await PostFormAsync("/Programmer?tool=Bitwise",
+            new() { ["Left"] = "5", ["Operation"] = "Not", ["Right"] = "", ["InputBase"] = "Decimal" });
+
+        Assert.DoesNotContain("alert-danger", html);
+        Assert.Equal("-6", DetailValue(html, "Decimal"));
+    }
+
+    [Fact]
+    public async Task Programmer_Shift_Left_Works()
+    {
+        string html = await PostFormAsync("/Programmer?tool=Bitwise",
+            new() { ["Left"] = "1", ["Operation"] = "ShiftLeft", ["Right"] = "4", ["InputBase"] = "Decimal" });
+
+        Assert.Equal("16", DetailValue(html, "Decimal"));
+    }
+
+    [Fact]
+    public async Task Programmer_Shifting_By_64_Shows_An_Error()
+    {
+        string html = await PostFormAsync("/Programmer?tool=Bitwise",
+            new() { ["Left"] = "1", ["Operation"] = "ShiftLeft", ["Right"] = "64", ["InputBase"] = "Decimal" });
+
+        Assert.Contains("alert-danger", html);
+        Assert.Contains("0 to 63", html);
+    }
+
+    [Fact]
+    public async Task Programmer_Bitwise_Asks_For_The_Missing_Numbers()
+    {
+        string noRight = await PostFormAsync("/Programmer?tool=Bitwise",
+            new() { ["Left"] = "5", ["Operation"] = "And", ["Right"] = "", ["InputBase"] = "Decimal" });
+        string noLeft = await PostFormAsync("/Programmer?tool=Bitwise",
+            new() { ["Left"] = "", ["Operation"] = "And", ["Right"] = "5", ["InputBase"] = "Decimal" });
+
+        Assert.Contains("Please enter the second number", noRight);
+        Assert.Contains("Please enter the first number", noLeft);
+    } 
+    #endregion
+
+    // ---- Menu and home page ----
+
+    [Fact]
+    public async Task The_Menu_And_Home_Page_Link_To_Dates_And_Programmer()
+    {
+        string html = await _client.GetStringAsync("/");
+
+        Assert.Matches("<a [^>]*href=\"/Dates\"[^>]*>Dates</a>", html);
+        Assert.Matches("<a [^>]*href=\"/Programmer\"[^>]*>Programmer</a>", html);
+        Assert.Matches("card-title\">Date calculator</h2>", html);
+        Assert.Matches("card-title\">Programmer calculator</h2>", html);
+        Assert.Matches("<a [^>]*href=\"/Dates\"[^>]*>Open</a>", html);
+        Assert.Matches("<a [^>]*href=\"/Programmer\"[^>]*>Open</a>", html);
     }
 }

@@ -4,6 +4,8 @@ using Prahelika.Calculators.Core.Finance;
 using Prahelika.Calculators.Core.Scientific;
 using Prahelika.Calculators.Core.Statistics;
 using Prahelika.Calculators.Core.Units;
+using Prahelika.Calculators.Core.Dates;
+using Prahelika.Calculators.Core.Programmer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,9 @@ builder.Services.AddSingleton<IIncomeTaxCalculator, IncomeTaxCalculator>();
 builder.Services.AddSingleton<ILoanPlanner, LoanPlanner>();
 builder.Services.AddSingleton<IStatisticsCalculator, StatisticsCalculator>();
 builder.Services.AddSingleton<IUnitConverter, UnitConverter>();
+builder.Services.AddSingleton<IDateCalculator, DateCalculator>();
+builder.Services.AddSingleton<IProgrammerCalculator, ProgrammerCalculator>();
+builder.Services.AddSingleton(TimeProvider.System);   // the clock: tests replace it with a fixed one
 
 var app = builder.Build();
 
