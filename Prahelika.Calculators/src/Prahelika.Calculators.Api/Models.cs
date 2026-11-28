@@ -8,3 +8,6 @@ public sealed record AngleCalcResponse(double Result, string AngleUnit);
 
 /// <summary>The mathematical constants offered by the API.</summary>
 public sealed record ConstantsResponse(double Pi, double E);
+
+/// <summary>One category of units, with the names of the units in it.</summary>
+public sealed record UnitCategoryInfo(string Category, string[] Units);
